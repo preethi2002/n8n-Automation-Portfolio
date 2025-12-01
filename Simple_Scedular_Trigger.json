@@ -1,0 +1,152 @@
+{
+  "name": "Simple_Scedular_Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        16
+      ],
+      "id": "cb5b223a-8d8d-431a-8965-8f445425d3c4",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "preethi@122.com",
+        "subject": "travel info",
+        "message": "travel info",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        16
+      ],
+      "id": "4f47e78b-95a6-4b4a-a656-944ab1eb38fa",
+      "name": "Send message and wait for response",
+      "webhookId": "4f196f63-9452-4f96-beea-0a410c777c3b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "QzchmdlasWTzGOjQ",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "GPT-3.5-TURBO"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.timestamp }}{{ $json['Readable date'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -112,
+        16
+      ],
+      "id": "dd05e82e-d028-41fc-94d2-d83b991e153e",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ua3xsNZL1DlyZTo5",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Document', ``, 'string') }}",
+          "mode": "id"
+        },
+        "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        16,
+        208
+      ],
+      "id": "d410fc19-5f1b-4db5-826b-c4f16813b6d9",
+      "name": "Create sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "lNy9BX92OFZS8I2b",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "Message a model",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "94eb514e-0f3d-480a-8b56-76374cd29afd",
+  "meta": {
+    "instanceId": "6f98da50e1bcb75865875df1e18ad4f36e8b35a2cfedc9612c01becef4ac9528"
+  },
+  "id": "2D78pJEhfQvIZGpb",
+  "tags": []
+}

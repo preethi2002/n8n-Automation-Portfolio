@@ -1,0 +1,258 @@
+{
+  "name": "Company Url Visitor Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "reshandthosh-visitor",
+        "options": {}
+      },
+      "id": "21c3405d-afbc-44aa-9818-7ec8fcebbfa6",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        224,
+        448
+      ],
+      "webhookId": "dfbdf3b3-d31d-433b-a805-031d39c0c94c"
+    },
+    {
+      "parameters": {
+        "url": "https://api.ipify.org?format=json",
+        "options": {}
+      },
+      "id": "7732c200-17a5-40c3-af72-479f1954a26f",
+      "name": "Get Visitor IP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        672,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://ipapi.co/{{$json[\"ip\"]}}/json/",
+        "options": {}
+      },
+      "id": "387be8a8-9182-4f82-806f-79f85c8fe8a0",
+      "name": "IP Lookup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        896,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "12Q9rXOSlltacrRDDcBrmBHrgUwn1Mw_A0KkokWGnQIg",
+          "mode": "list",
+          "cachedResultName": "Visitor_log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12Q9rXOSlltacrRDDcBrmBHrgUwn1Mw_A0KkokWGnQIg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12Q9rXOSlltacrRDDcBrmBHrgUwn1Mw_A0KkokWGnQIg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "IP": "={{ $json.ip }}",
+            "Location": "={{ $json.city }}",
+            "Referrer": "={{ $('Edit Fields').item.json.referral_source }}",
+            "Page": "={{ $('Edit Fields').item.json.page_visited }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "IP",
+              "displayName": "IP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Referrer",
+              "displayName": "Referrer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Page",
+              "displayName": "Page",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        448
+      ],
+      "id": "67f9992d-bf8a-4e4e-b037-b4dd8f8049a1",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "lNy9BX92OFZS8I2b",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c0cb28d9-e2dd-475b-ad36-ed8c26bdc960",
+              "name": "=refererral_source",
+              "value": "={{ JSON.parse($json.body).referrer }}",
+              "type": "string"
+            },
+            {
+              "id": "9dd3cf49-4c67-4301-812a-84d88d88500a",
+              "name": "=page_visited",
+              "value": "={{ JSON.parse($json.body).page_visited }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        448
+      ],
+      "id": "d4238d11-1ac9-424a-9343-652feff6671e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "sendTo": "preethirnt2002@gmail.com",
+        "subject": "=New Visitor on {{ $Company Name }}",
+        "message": "New Visitor on Resh and Thosh",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1344,
+        448
+      ],
+      "id": "75457822-1aa7-4c84-9eed-667e69b8160b",
+      "name": "Send a message1",
+      "webhookId": "139cee22-c3d7-424c-a03c-5abf9e1a1308",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "QzchmdlasWTzGOjQ",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Visitor IP": {
+      "main": [
+        [
+          {
+            "node": "IP Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IP Lookup": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get Visitor IP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "96ae9e19-9475-47a3-bc59-3bb68add81cc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6f98da50e1bcb75865875df1e18ad4f36e8b35a2cfedc9612c01becef4ac9528"
+  },
+  "id": "hfUQyc6AYuUrnyqa",
+  "tags": []
+}

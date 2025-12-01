@@ -1,0 +1,551 @@
+{
+  "name": "HOTEL_Annotation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1072,
+        448
+      ],
+      "id": "1c8948ad-3536-4ea2-8b71-d0b8b3eb353f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate 10 natural, user-style hotel booking or inquiry sentences in plain text. \nEach sentence must include between 3 and 4 different hotel booking entity types \n(such as ROOM_TYPE, HOTEL_NAME, CITY, DATE, MEAL_PLAN, TOTAL_COST, ROOM_COUNT, \nUSER_RATING, STAR_CATEGORY, ROOM_BED_TYPE, HOTEL_TYPE, etc.).\n\nSentences must look like real user messages or booking requests, not data tables.  \nDo not repeat hotel names, dates, or meal types.  \nReturn only **plain text sentences**, one per line — no JSON, no labels, no numbering.\n",
+        "options": {
+          "systemMessage": "=You are an expert NER data generator specializing in hotel booking training datasets.\n\nYour task:\nGenerate natural, realistic, user-style hotel booking or inquiry sentences in plain text format. \nEach generated sentence must include between **3 and 4 different entity types** from the hotel booking domain.\n\nFollow all the rules below carefully and ensure every sentence sounds like a real customer message or hotel detail — never like a table, label list, or machine text.\n\n-------------------\n### HOTEL BOOKING GENERATION RULES\n\n1. **Hotel and City**\n   - Include both domestic and international hotels.\n   - Each hotel name must have its corresponding city.\n   - No repetition of hotel names or landmarks.\n   - Each city should have a unique landmark mentioned.\n\n2. **Passenger Names**\n   - Use varied names and formats:\n     - With initials (e.g., R. Thahoor)\n     - With titles (Mr., Mrs., Miss, Dr.)\n     - Without prefix (e.g., Priya Menon)\n     - Multi-line names allowed (e.g., “Raveena Thahoor Begam” split across 2 or 3 lines).\n\n3. **Dates**\n   - Use random formats from this list without repeating the same pattern:\n     1 January 2024, 1 January, 1 2024, 01.1.2024, 1/January/2024, 1-January-2024,\n     1/January, 01-1, 01-01, 01.1, 1/Jan/2024, 1/Jan, 1/01/24, 2024/Jan/01, 2024January1,\n     2024-January-1, Jan 1, 2024, January 1, 2024, January 1, Jan-1, 1January, 01Jan,\n     1st January 2024, 1stJanuary, 1stJanuary2024, 1stJan2024, 1st Jan, 1Jan24,\n     Jan12024, 1January24, January12024, Jan 1st, Jan1st, January1st, January 1st,\n     January1, Jan1, 01st Jan, Jan 1, 1st.\n   - Include all months and multiple years.\n\n4. **Room Type**\n   - Randomly use from: Standard Room, Deluxe Room, Executive Room, Suite, Penthouse Suite, Villa, Cottage, Loft, Apartment Room, Club Room, etc.\n\n5. **Room Bed Type**\n   - Use types such as: Queen Bed, King Bed, Twin Bed, Double Bed, Bunk Bed, Sofa Bed, Daybed, Canopy Bed, etc.\n\n6. **User Rating**\n   - Include text and numeric styles like:\n     Excellent, Very Good, Good, Average, Fair\n     Excellent (4.8 & Maximum), Very Good (4+), Good (3.7 & above), etc.\n\n7. **Star Category**\n   - Random formats like: 5-star, 4.9 star, 5star, 4.9*, etc.\n\n8. **Room Count**\n   - Use both numeric (1–10) and alphabetic (one–ten) formats.\n\n9. **Currency**\n   - Domestic: INR\n   - Symbols: Rs., ₹, rupees., paise., $\n\n10. **Time Formats**\n   - Mix all styles:\n     - With AM/PM\n     - Only AM or only PM\n     - With/without “hrs”\n     - Examples: “10:30 AM”, “07:00 pm”, “6 hrs”, “at 9”, “by 11PM”.\n\n11. **Days**\n   - Randomly use from: Mon, Tue, Wed, Thu, Fri, Sat, Sun, Weekend, Next Day, Today, Tomorrow, After Tomorrow, etc.\n\n12. **Meal Preferences**\n   - Include types like: South Indian Thali, Jain Meal, Vegan Meal, Chicken Meal, Buffet Meal, À La Carte Meal, Continental Meal, Keto Meal, etc.\n\n13. **Hotel Types**\n   - Use multiple formats like: Luxury Hotels, Budget Hotels, Heritage Hotels, Boutique Hotels, Spa Hotels, Casino Hotels, etc.\n\n14. **Cost Relative**\n   - Express ₹1000 range in multiple ways:\n     Under ₹1000, Within ₹1000, Not exceeding ₹1000, ₹1000 or less, Budget ₹1000, Up to ₹1000, etc.\n\n15. **Room Packages / Amenities**\n   - Include realistic add-ons like:\n     - “with breakfast combo and free Wi-Fi”\n     - “includes airport pickup and sea view”\n     - “comes with early check-in and business lounge access”\n\n16. **Output Style**\n   - Generate text sentences only (no JSON or tags).\n   - Each sentence must include 5–6 entities (e.g., ROOM_TYPE, HOTEL_NAME, CITY, DATE, MEAL_PLAN, TOTAL_COST, etc.).\n   - Mix short and long sentences naturally.\n   - Use realistic user phrasing like “Book”, “Reserve”, “Need”, “Looking for”, etc.\n   - Avoid repetition across sentences.\n\n-------------------\n### OUTPUT FORMAT (MANDATORY)\n- Return only **plain text sentences**.\n- **Crucially:** Separate each sentence by a single **newline character (`\\n`)**.\n- **No numbering, no bullet points, no JSON, and no entity labels.**\n- Ensure the output consists of exactly **10 distinct lines/sentences**."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -848,
+        448
+      ],
+      "id": "c4318677-fc82-4329-a385-855dd87385df",
+      "name": "Text_Generated"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.Text }}",
+        "options": {
+          "systemMessage": "=ROLE:\nYou are a STRICT NER annotation engine for hotel booking and accommodation data. Your task is to ANNOTATE ONLY the given input text. Never generate, modify, or imagine new text.\n\nINSTRUCTION:\nYou will receive one input text per execution from Google Sheet (Get Row).\n\nIf text is empty or null, return an empty JSON object:\n{\n  \"classes\": [],\n  \"annotations\": []\n}\nOtherwise, perform character-level annotation.\n\nOUTPUT RULES:\n1. Output ONLY valid JSON.\n2. Never add explanations, examples, or commentary.\n3. Never generate new sentences or words.\n4. Input text must remain exactly same in output.\n5. Exclude prepositions and spaces from entity boundaries.\n6. Use exact character-level offsets.\n7. Do not include \"Input\" or \"Output\" labels.\n\nOUTPUT FORMAT:\n{\n  \"classes\": [\n    \"ROOM_TYPE\",\"HOTEL_NAME\",\"CITY\",\"CHECK_IN_DATE\",\"CHECK_OUT_DATE\",\"CHECK_IN_TIME\",\"CHECK_OUT_TIME\",\n    \"ROOM_VIEW\",\"CHECK_IN_DAY\",\"CHECK_OUT_DAY\",\"ROOM_AMENITIES\",\"ROOM_BED_TYPE\",\"ROOM_PACKAGE\",\"MEAL_PLAN\",\n    \"LOCATION\",\"TOTAL_COST\",\"NOP\",\"HOTEL_TYPE\",\"STAR_CATEGORY\",\"ROOM_COUNT\",\"PASSENGER\",\"DURATION\",\n    \"MEAL_PREFERENCE\",\"PROPERTY_TYPE\",\"LANDMARK\",\"USER_RATING\",\"FREE_CANCELLATION\",\"HOTEL_AMENITIES\",\n    \"CANCELLATION_FEE\",\"PAYMENT_OPTIONS\",\"ROOM_BED_COUNT\",\"DISTANCE\",\"CANCELLATION_CONDITION\",\n    \"FREE_CANCELLATION_CONDITION\",\"FARE_TYPE\"\n  ],\n  \"annotations\": [\n    [\"<original_input_text>\", {\"entities\": [[start, end, label]]}]\n  ]\n}\n\nEXAMPLES:\nSentence: \"Need a deluxe room in The Leela Palace Chennai from 2nd Feb to 5th Feb\"\nOutput Example:\n{\n  \"classes\": [\"ROOM_TYPE\",\"HOTEL_NAME\",\"CITY\",\"CHECK_IN_DATE\",\"CHECK_OUT_DATE\"],\n  \"annotations\": [\n    [\"Need a deluxe room in The Leela Palace Chennai from 2nd Feb to 5th Feb\",\n      {\"entities\":[[7,18,\"ROOM_TYPE\"],[22,39,\"HOTEL_NAME\"],[40,47,\"CITY\"],[53,60,\"CHECK_IN_DATE\"],[64,71,\"CHECK_OUT_DATE\"]]}\n    ]\n  ]\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        144,
+        448
+      ],
+      "id": "c56c729a-4f33-4fe6-adf5-5d542554501f",
+      "name": "Annotator Tool"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        96,
+        656
+      ],
+      "id": "667cf271-d53f-4a58-aa53-d407b6ad59b6",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "MJWlctQo7MKuVpVK",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -832,
+        624
+      ],
+      "id": "72def23a-e493-487f-9f80-adec259769ef",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "MJWlctQo7MKuVpVK",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {
+          "fileName": "hotelannotation.json"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        208
+      ],
+      "id": "edda0be9-dbc0-4e75-aa09-d24ae9a9a8ec",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ✅ Function Node: Validate Annotation JSON\n// This node checks if AI’s annotation JSON is correct and safe to store.\n\nconst input = items[0].json; // Get input JSON\nconst sentence = input.annotations?.[0]?.[0];\nconst entities = input.annotations?.[0]?.[1]?.entities || [];\nconst validClasses = [\n  \"ROOM_TYPE\",\"HOTEL_NAME\",\"CITY\",\"CHECK_IN_DATE\",\"CHECK_OUT_DATE\",\"CHECK_IN_TIME\",\"CHECK_OUT_TIME\",\n  \"ROOM_VIEW\",\"CHECK_IN_DAY\",\"CHECK_OUT_DAY\",\"ROOM_AMENITIES\",\"ROOM_BED_TYPE\",\"ROOM_PACKAGE\",\"MEAL_PLAN\",\n  \"LOCATION\",\"TOTAL_COST\",\"NOP\",\"HOTEL_TYPE\",\"STAR_CATEGORY\",\"ROOM_COUNT\",\"PASSENGER\",\"DURATION\",\n  \"MEAL_PREFERENCE\",\"PROPERTY_TYPE\",\"LANDMARK\",\"USER_RATING\",\"FREE_CANCELLATION\",\"HOTEL_AMENITIES\",\n  \"CANCELLATION_FEE\",\"PAYMENT_OPTIONS\",\"ROOM_BED_COUNT\",\"DISTANCE\",\"CANCELLATION_CONDITION\",\n  \"FREE_CANCELLATION_CONDITION\",\"FARE_TYPE\"\n];\n\nconst errors = [];\nconst validEntities = [];\n\nif (!sentence || typeof sentence !== 'string') {\n  errors.push(\"Missing or invalid sentence text.\");\n}\n\n// ✅ Validation for each entity\nfor (const [start, end, label] of entities) {\n  if (typeof start !== 'number' || typeof end !== 'number') {\n    errors.push(`Invalid index type for label ${label}.`);\n    continue;\n  }\n  if (start < 0 || end > sentence.length || start >= end) {\n    errors.push(`Out-of-range or invalid span for label ${label}.`);\n    continue;\n  }\n  if (!validClasses.includes(label)) {\n    errors.push(`Unknown label: ${label}`);\n    continue;\n  }\n\n  // Trim whitespace adjustment if needed\n  let textFragment = sentence.slice(start, end).trim();\n  let adjustedStart = sentence.indexOf(textFragment, start);\n  let adjustedEnd = adjustedStart + textFragment.length;\n\n  validEntities.push([adjustedStart, adjustedEnd, label]);\n}\n\n// ✅ Prepare validated output\nreturn [\n  {\n    json: {\n      sentence,\n      entities: validEntities,\n      valid: errors.length === 0,\n      errors,\n      total_entities: validEntities.length,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        400
+      ],
+      "id": "1f739da4-5fae-4d2d-9007-f3356da55c02",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        784,
+        448
+      ],
+      "id": "a0250af9-9292-444a-b39e-c568f82fb77b",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        976,
+        496
+      ],
+      "id": "749fe071-7946-427e-934a-4c19acd8ed99"
+    },
+    {
+      "parameters": {
+        "content": "TEXT GENERATED AI-Agent:\n",
+        "height": 448,
+        "width": 368,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -928,
+        368
+      ],
+      "typeVersion": 1,
+      "id": "02d88464-6b27-4964-984a-e6c5d075f324",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This code splits the single text output (with lines separated by \\n) into multiple items.\n\n// 1. Get the generated text content from the previous node (Gemini)\n// Assuming the text is in the 'text' property of the output item.\nconst generatedText = items[0].json.text || items[0].json.output || items[0].json.content;\n\nif (!generatedText) {\n    return []; // Return empty if no text was generated\n}\n\n// 2. Split the text by newline character (\\n)\n// Filter out any empty lines that might occur\nconst sentences = generatedText\n    .split('\\n')\n    .map(s => s.trim()) // Trim whitespace from each sentence\n    .filter(s => s.length > 5); // Ensure the sentence is meaningful\n\n// 3. Convert each sentence into a new n8n item\nconst outputItems = sentences.map(sentence => ({\n    json: {\n        text: sentence // Use 'text' key for the sentence content\n    }\n}));\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        448
+      ],
+      "id": "4c001413-f3d7-4995-8f12-b57329b37146",
+      "name": "Split_output"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1UMmddiCjT8a7_tLF2JeJ0hyUTK2kwxb18cRbCeVVgIo",
+          "mode": "list",
+          "cachedResultName": "annoatations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UMmddiCjT8a7_tLF2JeJ0hyUTK2kwxb18cRbCeVVgIo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UMmddiCjT8a7_tLF2JeJ0hyUTK2kwxb18cRbCeVVgIo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Text": "={{ $json.text }}"
+          },
+          "matchingColumns": [
+            "Text"
+          ],
+          "schema": [
+            {
+              "id": "Text",
+              "displayName": "Text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -272,
+        448
+      ],
+      "id": "087382ea-d631-4efa-bce5-126632410eae",
+      "name": "Append row_response",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8QDYgxoSLziyb8Yj",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1UMmddiCjT8a7_tLF2JeJ0hyUTK2kwxb18cRbCeVVgIo",
+          "mode": "list",
+          "cachedResultName": "annoatations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UMmddiCjT8a7_tLF2JeJ0hyUTK2kwxb18cRbCeVVgIo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UMmddiCjT8a7_tLF2JeJ0hyUTK2kwxb18cRbCeVVgIo/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -96,
+        448
+      ],
+      "id": "b8cc957a-fa5d-47d7-8f48-701ac80bd24a",
+      "name": "Get_TextData",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8QDYgxoSLziyb8Yj",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "ANNOTATION TOOL AI-Agent:\n\nNER-Tool use",
+        "height": 400,
+        "width": 400,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        32,
+        384
+      ],
+      "typeVersion": 1,
+      "id": "1ed9b9c1-ac17-415d-8858-57813e94958e",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Merge All annotation Jsons\n",
+        "height": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        496,
+        400
+      ],
+      "typeVersion": 1,
+      "id": "15b93eab-e681-4eac-8752-b4bd1c43a74d",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * This n8n Code Node is designed to merge multiple NER annotation JSONs\n * (outputted from an AI Model/Annotator Tool) into a single, clean JSON array.\n * It ensures 'classes' are unique and all 'annotations' are collected.\n */\n\n// Function to safely merge two arrays and remove duplicates (useful for 'classes' array)\nfunction mergeAndUniq(arr1, arr2) {\n    const combined = [...arr1, ...arr2];\n    // Use Set to filter unique values\n    return Array.from(new Set(combined));\n}\n\n// 1. Initialize the final merged structure\nlet finalAnnotation = {\n    classes: [],\n    annotations: []\n};\n\n// 2. Define the complete set of classes as the required baseline (from your system prompt)\nconst fullClassesList = [\n    \"ROOM_TYPE\",\"HOTEL_NAME\",\"CITY\",\"CHECK_IN_DATE\",\"CHECK_OUT_DATE\",\"CHECK_IN_TIME\",\"CHECK_OUT_TIME\",\n    \"ROOM_VIEW\",\"CHECK_IN_DAY\",\"CHECK_OUT_DAY\",\"ROOM_AMENITIES\",\"ROOM_BED_TYPE\",\"ROOM_PACKAGE\",\"MEAL_PLAN\",\n    \"LOCATION\",\"TOTAL_COST\",\"NOP\",\"HOTEL_TYPE\",\"STAR_CATEGORY\",\"ROOM_COUNT\",\"PASSENGER\",\"DURATION\",\n    \"MEAL_PREFERENCE\",\"PROPERTY_TYPE\",\"LANDMARK\",\"USER_RATING\",\"FREE_CANCELLATION\",\"HOTEL_AMENITIES\",\n    \"CANCELLATION_FEE\",\"PAYMENT_OPTIONS\",\"ROOM_BED_COUNT\",\"DISTANCE\",\"CANCELLATION_CONDITION\",\n    \"FREE_CANCELLATION_CONDITION\",\"FARE_TYPE\"\n];\n\n// 3. Loop through ALL items coming into this Code node (which are the outputs of the Loop Over Items / Annotator Tool)\nfor (const item of items) {\n    let parsed;\n    \n    // Attempt to extract and parse the JSON content safely from the input item\n    try {\n        // Assuming the Annotator Tool/Gemini output is in item.json\n        let content = item.json.content || item.json.text || item.json.output || JSON.stringify(item.json);\n        \n        // Clean up markdown wrappers (```json...```) if they exist\n        content = content.replace(/^```json/, '').replace(/```$/, '').trim();\n\n        // Try parsing the cleaned content\n        parsed = JSON.parse(content);\n        \n    } catch (e) {\n        // If parsing fails (e.g., if the model outputted plain text or invalid JSON), skip the item.\n        console.warn(\"Skipping item due to invalid JSON format:\", e.message);\n        continue;\n    }\n\n    // 4. Merge 'classes': Add/update the classes list\n    if (parsed.classes && Array.isArray(parsed.classes)) {\n        finalAnnotation.classes = mergeAndUniq(finalAnnotation.classes, parsed.classes);\n    } \n\n    // 5. Merge 'annotations': Collect all annotation entries\n    if (parsed.annotations && Array.isArray(parsed.annotations)) {\n        // Apply the required \"\\r\" carriage return logic for file format compatibility\n        const cleanedAnnotations = parsed.annotations.map(([text, obj]) => [\n            // Check if the text already ends with \\r, if not, append it\n            text.endsWith(\"\\r\") ? text : text + \"\\r\",\n            obj\n        ]);\n        \n        // Concatenate the annotations from the current item to the final list\n        finalAnnotation.annotations.push(...cleanedAnnotations);\n    }\n}\n\n// 6. Final check: Ensure the final 'classes' list contains all entities defined in the full list\n// This ensures that even if some entities weren't in the model's output, they are present in the final JSON structure.\nfinalAnnotation.classes = mergeAndUniq(finalAnnotation.classes, fullClassesList);\n\n// 7. Return the single, merged JSON object\nreturn [{ json: finalAnnotation }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        448
+      ],
+      "id": "6aeb5b72-b7d7-4044-8d01-13a6b88a7c83",
+      "name": "merge_annotation_jsons"
+    },
+    {
+      "parameters": {
+        "sendTo": "preethirnt2002@gmail.com",
+        "subject": "Annotation Json :",
+        "emailType": "text",
+        "message": "json",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1424,
+        208
+      ],
+      "id": "9352672f-1ab2-424e-8ea2-2dcd9197cd1f",
+      "name": "Sent_Annotation_File",
+      "webhookId": "8911f6e4-b92a-4d79-bf17-466c2aca33db",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4BJG6QitVjf1LUHS",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "NER Json Format:\n",
+        "height": 224,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        912,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "402a582b-0549-401d-89c2-0b884f536809",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ✅ Clean and format hotel NER annotation JSON correctly\n\n// Step 1: Extract content safely\nlet content =\n  items[0].json.content ||\n  items[0].json.text ||\n  items[0].json.output ||\n  JSON.stringify(items[0].json);\ncontent = content.trim();\n\n// Step 2: Remove unwanted markdown wrappers if any\ncontent = content.replace(/^```json/, '').replace(/```$/, '').trim();\n\n// Step 3: Try parsing the JSON safely\nlet parsed;\ntry {\n  parsed = JSON.parse(content);\n} catch (e) {\n  // Step 4: Fallback structure when Gemini gives text, not JSON\n  parsed = {\n    classes: [\n      \"BAGGAGE\",\"CHECK_IN_DATE\",\"CHECK_OUT_DATE\",\"CHECK_IN_TIME\",\"CHECK_OUT_TIME\",\"CHECK_IN_DAY\",\n      \"ROOM_AMENITIES\",\"ROOM_PACKAGE\",\"MEAL_PLAN\",\"LOCATION\",\"TOTAL_COST\",\"ROOM_COUNT\",\n      \"PROPERTY_TYPE\",\"LANDMARK\",\"USER_RATING\",\"PAYMENT_OPTIONS\",\"ROOM_BED_COUNT\",\"ROOM_TYPE\",\n      \"HOTEL_NAME\",\"CITY\",\"ROOM_VIEW\",\"CHECK_OUT_DAY\",\"ROOM_BED_TYPE\",\"NOP\",\"HOTEL_TYPE\",\n      \"STAR_CATEGORY\",\"PASSENGER\",\"DURATION\",\"MEAL_PREFERENCE\",\"FREE_CANCELLATION\",\n      \"HOTEL_AMENITIES\",\"CANCELLATION_FEE\",\"DISTANCE\",\"CANCELLATION_CONDITION\",\n      \"FARE_TYPE\",\"FREE_CANCELLATION_CONDITION\",\"CABIN\",\"PRICE_UNIT\"\n    ],\n    annotations: [\n      [\n        content + \"\\r\",\n        { \"entities\": [] }\n      ]\n    ]\n  };\n}\n\n// Step 5: Ensure `\\r` is added even when valid JSON was parsed\nif (parsed.annotations && Array.isArray(parsed.annotations)) {\n  parsed.annotations = parsed.annotations.map(([text, obj]) => [\n    text.endsWith(\"\\r\") ? text : text + \"\\r\",\n    obj\n  ]);\n}\n\n// Step 6: Return cleaned JSON for next node\nreturn [{ json: parsed }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        304
+      ],
+      "id": "650c7007-73bd-4464-b077-72240c65b72c",
+      "name": "Json_format"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Text_Generated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text_Generated": {
+      "main": [
+        [
+          {
+            "node": "Split_output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Annotator Tool": {
+      "main": [
+        [
+          {
+            "node": "merge_annotation_jsons",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Annotator Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text_Generated",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Sent_Annotation_File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        []
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Json_format",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split_output": {
+      "main": [
+        [
+          {
+            "node": "Append row_response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row_response": {
+      "main": [
+        [
+          {
+            "node": "Get_TextData",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get_TextData": {
+      "main": [
+        [
+          {
+            "node": "Annotator Tool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge_annotation_jsons": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sent_Annotation_File": {
+      "main": [
+        []
+      ]
+    },
+    "Json_format": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b86a4d72-1489-460a-9408-906a3df52f92",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0e1fd36c41004a23cb5969e26b82076889cec103fe11090d4fb3b426db15d523"
+  },
+  "id": "OroKWNyhRFsT0q8u",
+  "tags": []
+}

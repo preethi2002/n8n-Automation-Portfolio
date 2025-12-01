@@ -1,0 +1,318 @@
+{
+  "name": "Multiple trigger Travel Version",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "27397970-1c47-4468-906c-0c9ff72e24b0",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        320,
+        -128
+      ],
+      "typeVersion": 1.2,
+      "webhookId": "089e2038-229c-481a-a9e9-93a9469a2967"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice-trigger",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "eeecc374-351a-458f-80dd-1a980cbfcba6",
+      "name": "Voice Trigger (VAPI Voice)",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        320,
+        64
+      ],
+      "typeVersion": 2.1,
+      "webhookId": "c7259a0c-a69d-4ee5-ae51-6ee64bf5d440"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "travel-form",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "a76dbbaf-3314-403f-95e3-31e347c72319",
+      "name": "Web Form Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        320,
+        256
+      ],
+      "typeVersion": 2.1,
+      "webhookId": "c08b951a-afd3-49d9-aee4-a002d5dcb60e"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.vapi.ai/v1/ner",
+        "options": {}
+      },
+      "id": "07e51b87-fb0f-4606-ac6f-f0a49213acf4",
+      "name": "AI NER Extractor (VAPI Voice)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        544,
+        64
+      ],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "url": "https://booking-com.p.rapidapi.com/v1/hotels/search",
+        "options": {}
+      },
+      "id": "8f0a4731-e58c-4065-9eaf-4daef6b1c657",
+      "name": "Flight & Hotel Search (Booking API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        768,
+        64
+      ],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.vapi.ai/v1/summary",
+        "options": {}
+      },
+      "id": "aa485307-3d75-496e-bc1d-afd3d566378e",
+      "name": "AI Summary Builder",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        992,
+        64
+      ],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json[\"message\"][\"chat\"][\"id\"]}}",
+        "text": "={{$json[\"summary\"] || 'Here are your travel options!'}}",
+        "additionalFields": {}
+      },
+      "id": "43593455-737c-4045-8ff5-c74570881d67",
+      "name": "Send Telegram Message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1216,
+        -176
+      ],
+      "typeVersion": 1.2,
+      "webhookId": "1c147fca-71e1-4512-b1ee-1979324ba25c"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twilio.com/2010-04-01/Accounts/TWILIO_SID/Messages.json",
+        "authentication": "basicAuth",
+        "options": {}
+      },
+      "id": "379460f8-146c-45cb-903c-f7f455bd2582",
+      "name": "Send WhatsApp Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1216,
+        -32
+      ],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.vapi.ai/v1/voice/reply",
+        "options": {}
+      },
+      "id": "22513692-0955-4e2d-b0fe-1fd1db442e49",
+      "name": "Voice Reply (VAPI TTS)",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1216,
+        352
+      ],
+      "typeVersion": 4.3
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1yL6a5pNrlFVPngoHl2YLtJtgs1TvGGmw2qcCk5-B34c",
+          "mode": "list",
+          "cachedResultName": "Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yL6a5pNrlFVPngoHl2YLtJtgs1TvGGmw2qcCk5-B34c/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1yL6a5pNrlFVPngoHl2YLtJtgs1TvGGmw2qcCk5-B34c/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a9c30927-1a01-47f9-bd4a-0dc9f22e0e98",
+      "name": "Log to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1216,
+        160
+      ],
+      "typeVersion": 4.7,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "lNy9BX92OFZS8I2b",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "preethirnt2002@gmail.com",
+        "subject": "Hello ",
+        "message": "message",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1440,
+        160
+      ],
+      "id": "90476982-4075-4a8e-9cee-cb94ae974a32",
+      "name": "Send a message",
+      "webhookId": "52a5b683-7cac-4410-abb0-9b1a04f0856b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "QzchmdlasWTzGOjQ",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI NER Extractor (VAPI Voice)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voice Trigger (VAPI Voice)": {
+      "main": [
+        [
+          {
+            "node": "AI NER Extractor (VAPI Voice)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Web Form Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI NER Extractor (VAPI Voice)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI NER Extractor (VAPI Voice)": {
+      "main": [
+        [
+          {
+            "node": "Flight & Hotel Search (Booking API)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flight & Hotel Search (Booking API)": {
+      "main": [
+        [
+          {
+            "node": "AI Summary Builder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Summary Builder": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Voice Reply (VAPI TTS)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6a4a70d8-873a-4fbf-8bd5-db7940d0cd5d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6f98da50e1bcb75865875df1e18ad4f36e8b35a2cfedc9612c01becef4ac9528"
+  },
+  "id": "hfUQyc6AYuUrnyqa",
+  "tags": []
+}

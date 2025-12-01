@@ -1,0 +1,3191 @@
+{
+  "name": "Visa Application Processing with Payment and Auto fill Form Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "message": "={{ $json.message }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        -6192,
+        4128
+      ],
+      "id": "2acac810-afc7-46c4-a800-cc5af95dd5a6",
+      "name": "Respond to Chat1"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        -7888,
+        4176
+      ],
+      "id": "4663b258-d2b9-4dc2-b768-845323459179",
+      "name": "Respond to Chat3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ✅ 1. Safe-ah chatInput edukkurom\nconst data = $items(\"When chat message received\")[0]?.json || {};\nconst userMessage = data.chatInput || \"\";\n\n// ✅ 2. Universal passport regex (ANY format, validity check illa)\nconst passportRegex = /passport\\s*[:\\-]?\\s*([A-Za-z0-9]+)/i;\n\n// ✅ 3. Extract passport safely\nconst match = userMessage.match(passportRegex);\nconst passportNumber = match ? match[1].toUpperCase() : \"\";\n\n// ✅ 4. sessionId + action safe-ah edukkurom\nconst sessionId = data.sessionId || \"\";\nconst action = data.action || \"\";\n\n// ✅ 5. Final output (Next nodes-ku send aagum)\nreturn [\n  {\n    sessionId: sessionId,\n    action: action,\n    passportNumber: passportNumber,\n    originalMessage: userMessage\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -7664,
+        4112
+      ],
+      "id": "09eec396-7d51-4361-89fc-b63fb744f72a",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8215a6e6-1ece-47e0-a57b-6add52c02efb",
+              "name": "Passport_number",
+              "value": "={{ $json.passportNumber }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -7440,
+        4112
+      ],
+      "id": "10a8fe81-7842-4f51-ba32-e75676e862e1",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "responseDataSource": "set",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "9e12da41-21a7-4ee3-9c8a-235b254d2145",
+      "name": "Respond To Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -8464,
+        2480
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $json.file_name }}",
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -8464,
+        2704
+      ],
+      "id": "819e1278-46ed-4400-9115-9fa80167233b",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZLJCNJMUi3ay7K7q",
+          "name": "Google Drive account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all rows passed to this node\nconst rows = items.map(item => item.json);\n\n// Safety check\nif (!rows.length) {\n  return [{\n    json: {\n      message: \"❌ No document records found.\"\n    }\n  }];\n}\n\n// Get Passport Number, Applicant Name, and Download Link from first row\nconst passportNumber = rows[0][\"Passport Number\"] || \"undefined\";\nconst applicantName = rows[0][\"applicant_name\"] || \"undefined\";\nconst downloadLink = rows[0][\"downloadLinks\"] || \"\";\n\n// Build proper Google Drive folder link\nconst driveFolderLink = downloadLink\n  ? `https://drive.google.com/drive/folders/${downloadLink}`\n  : \"Drive link not available\";\n\n// Start building the message\nlet message = `✅ Previous documents found for Passport Number ${passportNumber} (Applicant: ${applicantName}).\\n\\n`;\n\n// Loop through each document row to add details\nrows.forEach((row, index) => {\n  const docType = row[\"Document_Type\"] || \"undefined\";\n  const uploadedDate = row[\"Uploaded_Date\"] || \"N/A\";\n  \n  message += `${index + 1}. ${docType} (Uploaded: ${uploadedDate}) – [Click to Access Folder](${driveFolderLink})\\n`;\n});\n\n// Add the confirmation options at the end\nmessage += \"\\nPlease confirm:\\n- ✅ Use existing documents\\n- 🔄 Upload new documents\";\n\n// Return formatted JSON\nreturn [{ json: { message } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6416,
+        3968
+      ],
+      "id": "6b7591eb-49d5-4aa8-8100-acfff9d54604",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -7216,
+        4336
+      ],
+      "id": "75bd7184-7480-4e42-a3af-d97141f0004d",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6gDYNAoDK07pVT3M",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input is a JSON STRING → Convert to usable object\nconst raw = JSON.parse($json.output);\n\n// Return structured fields\nreturn [\n  {\n    json: {\n      status: raw.status,\n      country: raw.country,\n      visa_type: raw.visa_type,\n\n      first_name: raw.basic_details.first_name,\n      last_name: raw.basic_details.last_name,\n      dob: raw.basic_details.dob,\n      nationality: raw.basic_details.nationality,\n      passport_number: raw.basic_details.passport_number,\n      email: raw.basic_details.email,\n      phone: raw.basic_details.phone,\n      address: raw.basic_details.address,\n\n      destination_city: raw.basic_details.travel_details.destination_city,\n      travel_date: raw.basic_details.travel_details.travel_date,\n      return_date: raw.basic_details.travel_details.return_date,\n\n      flight_info: raw.basic_details.flight_info,\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -7664,
+        4304
+      ],
+      "id": "322111cd-1f90-4d6c-a98b-66819f69a5e0",
+      "name": "Seperated Json"
+    },
+    {
+      "parameters": {
+        "options": {
+          "allowFileUploads": true,
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -8464,
+        4320
+      ],
+      "id": "82fac4ad-29d8-4267-bb53-41cdeb397336",
+      "name": "When chat message received",
+      "webhookId": "8477934f-e7ea-49ce-a367-2911442f4ae7"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 500
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -8464,
+        5424
+      ],
+      "id": "e75a623e-05e5-4598-af9b-edc89752fd65",
+      "name": "Simple Memory",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -8240,
+        4544
+      ],
+      "id": "ea4f79ed-bf61-4c8a-bcad-019267c3eb58",
+      "name": "Google Gemini Chat Model9",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6gDYNAoDK07pVT3M",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a15da315-4906-4cb7-a891-b5881b716a13",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -4592,
+        3632
+      ],
+      "id": "a84fdab3-551c-4dd9-879f-39528ff77e0f",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -4880,
+        3856
+      ],
+      "id": "f3841550-6d77-42dc-86c4-933e8aa609dc",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6gDYNAoDK07pVT3M",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Please upload the document for Quality Check.\n",
+        "options": {
+          "systemMessage": "You are AGENT-QC, a professional Visa Quality Check & Document Validation AI.\n\nYour only responsibility:\nValidate every user-uploaded visa document according to country rules, technical rules, and completeness rules.\n\n====================================================\nINPUT FORMAT (ALWAYS EXPECTED)\n====================================================\n\nYou will receive:\n- country\n- visa_type\n- one document at a time (passport front, passport back, photo, bank statement, etc.)\n- extracted metadata (if available): width, height, file size, file type, OCR text\n\n====================================================\nDOCUMENT TYPES YOU MUST VALIDATE\n====================================================\n\n1. Passport Front  \n2. Passport Back  \n3. Photograph  \n4. Bank Statement  \n5. Hotel Booking  \n6. Flight Ticket  \n7. Invitation Letter  \n8. Employment / Business Proof  \n9. Any other user-uploaded visa document\n\n====================================================\nVALIDATION RULES (APPLY ALL)\n====================================================\n\n### 1. FILE TECHNICAL VALIDATION\nCheck:\n- File format (jpg, jpeg, png, pdf allowed)\n- File size (not more than 5 MB)\n- Resolution (if image)\n- Corruption/not readable\n\nIf invalid → clearly say what to fix.\n\n### 2. PASSPORT FRONT VALIDATION\nCheck for:\n- Full MRZ visible (bottom two lines)\n- Passport number visible\n- Name visible\n- Date of birth visible\n- Expiry date visible\n- Nationality visible\n- No cropping / no blur\n- Entire page is visible\n\nIf missing → tell user EXACTLY which field is missing.\n\n### 3. PASSPORT BACK VALIDATION\nCheck:\n- Address (if country requires)\n- Signature (if available in that country)\n- Barcode readable\n- Machine-readable zone (if applicable)\n\n### 4. PHOTO VALIDATION (BIOMETRIC)\nApply standard visa rules:\n- 2x2 inch (51mm × 51mm)  \n- 600×600 to 1200×1200 pixels  \n- White background  \n- Face centered  \n- Eyes open  \n- No shadows  \n- No blur  \n- No filter  \n- No accessories covering face  \n\nIf anything invalid → explain correction.\n\n### 5. COUNTRY-SPECIFIC RULES\nYou must apply rules based on country:\n- USA: 2x2 inch photo, no shadows, full MRZ needed  \n- UK: 600px photo, no smile  \n- Schengen: 35×45mm photo, light background  \n- Dubai: Full passport scan required  \n- Singapore: Strict 400×514px photo  \n\nIf user’s document violates country-guidelines:\n→ Tell exactly what guideline failed.\n\n### 6. TEXT CONSISTENCY CHECKS (OCR)\nUse extracted text:\n- Passport name matches applicant name  \n- Passport number matches intake data  \n- DOB matches  \n- Expiry date > today  \n- Nationality matches user_data  \n\nIf mismatch → report clearly.\n\n====================================================\nOUTPUT RULES\n====================================================\n\nYour response **MUST be in this exact JSON format only**:\n\n{\n  \"document_type\": \"{type}\",\n  \"status\": \"valid\" | \"invalid\",\n  \"issues\": [ ... ],\n  \"recommendations\": [ ... ],\n  \"next_step\": \"{next action for user}\"\n}\n\nWhere:\n- issues = what is wrong (empty if none)\n- recommendations = how to fix\n- next_step = what user must do next\n\nIf valid:\n- status = \"valid\"\n- issues = []\n- recommendations = []\n- next_step = \"Please upload the next document.\"\n\nIf invalid:\n- status = \"invalid\"\n- issues = the exact problems\n- recommendations = exact solution steps\n- next_step = \"Please re-upload this document after correction.\"\n\n====================================================\nBEHAVIOUR RULES\n====================================================\n\n✔ Be extremely strict  \n✔ Be accurate  \n✔ Be professional  \n✔ Never be vague  \n✔ Never skip rules  \n✔ Never approve low quality documents  \n✔ Never ask questions — ONLY validate  \n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -4944,
+        3632
+      ],
+      "id": "a7aaea77-5476-4d93-b855-784270ecaf8b",
+      "name": "Validity Check"
+    },
+    {
+      "parameters": {
+        "operation": "rtf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -5680,
+        4080
+      ],
+      "id": "155b3620-fc5d-473f-84f7-74e1eea37023",
+      "name": "RTF"
+    },
+    {
+      "parameters": {
+        "message": "={{ $('Visa Applicant Agent').item.json.output }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        -6416,
+        3776
+      ],
+      "id": "b36fc0bf-4fa1-4d59-9934-9c368084c42e",
+      "name": "Respond to Chat"
+    },
+    {
+      "parameters": {
+        "jsCode": "// (Idhu text-ai combine seidhu, first file-oda binary-ai preserve seiyum)\nconst items = $input.all(); \nlet fullText = \"\";\nlet binaryDataToKeep = null; // Binary data-vai vachirikka\n\nfor (let i = 0; i < items.length; i++) {\n  const itemData = items[i].json;\n  \n  // Ungaloda files-il output or data.output endra key-il text irukkum\n  let documentText = itemData.output || (itemData.data && itemData.data.output) || JSON.stringify(itemData, null, 2);\n\n  fullText += `\\n=== DOCUMENT START (Index: ${i}) ===\\n${documentText}\\n`;\n  \n  // *** Binary Preservation Logic ***\n  // Index 0 (First File) oda binary data-vai (ungaloda file1 endra key-la irukkum) edukkirom\n  if (i === 0 && items[i].binary && items[i].binary.file1) {\n      binaryDataToKeep = items[i].binary.file1;\n  }\n}\n\n// Output Item-ai create seigirom\nlet outputItem = {\n  json: {\n    combined_prompt: fullText\n  }\n};\n\n// Binary data-vai output item-kku attach seigirom (Intha binary-ku new name 'passport_binary')\nif (binaryDataToKeep) {\n    outputItem.binary = {\n        passport_binary: binaryDataToKeep\n    };\n}\n\nreturn outputItem;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5168,
+        3632
+      ],
+      "id": "c2abc84d-5cb8-47a4-8d06-0381d7465f7d",
+      "name": "Combine_All_Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "let data = $json.output;\n\n// Remove ```json and ```\ndata = data.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\n\ntry {\n  return [{ json: JSON.parse(data) }];\n} catch (e) {\n  return [{ json: { error: \"Invalid JSON format\", raw: data }}];\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4016,
+        3632
+      ],
+      "id": "3a2e7055-c683-4656-9cbc-4d531bb1432e",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "344594f4-b6ca-47c7-b31b-ccbf8404e0d5",
+              "name": "Applicant_Name",
+              "value": "={{ $json.applicant_name }}",
+              "type": "string"
+            },
+            {
+              "id": "6573b480-4123-4948-a5f7-78cda4be36a9",
+              "name": "Passport_No",
+              "value": "={{ $json.passport_number }}",
+              "type": "string"
+            },
+            {
+              "id": "46e97e84-1702-47b3-85d0-3aaf6c32d428",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3792,
+        3632
+      ],
+      "id": "7d6831e6-458a-42b0-8d40-1cc55b6989b5",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -4304,
+        3856
+      ],
+      "id": "36f6195d-3b10-4a8c-a94d-078986d98949",
+      "name": "Google Gemini Chat Model8",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6gDYNAoDK07pVT3M",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following combined document data and provide the requested structured output.\n\nDocument Data: {{ $json.output }}",
+        "options": {
+          "systemMessage": "You are an expert document analysis and file management agent. Your primary task is to read the combined text and produce a single JSON object.\n\n1.  **Extraction:** If Passport details are present, extract the Applicant Name (Full Name) and the Passport Number.\n2.  **Classification:** Determine if the document set is 'Mandatory' (e.g., Primary ID, Passport) or 'Additional' (e.g., Bank Statement).\n3.  **Format:** You MUST output ONLY a single, valid JSON object in the following schema:\n    `{\"applicant_name\": \"Extracted Name\", \"passport_number\": \"Extracted Number\", \"document_type\": \"Mandatory or Additional\"}`"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -4368,
+        3632
+      ],
+      "id": "32a3e6f8-b7b6-4034-84c7-2fcd7e7bcf64",
+      "name": "File name Automatic Create"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ae42872f-200e-42e2-be0c-aecabb0be244",
+              "leftValue": "={{ $json.binary.data}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "c7cc2961-5abf-4a82-9192-5b12c7ad68a1",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -6640,
+        3616
+      ],
+      "id": "31dc5cd1-0e29-491f-91f7-3f0224dc839f",
+      "name": "Check Type"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = items[0];\nconst binaries = item.binary || {};\n\nconst fileKeys = Object.keys(binaries);\n\nif (fileKeys.length === 0) {\n  return [\n    {\n      json: {\n        success: false,\n        message: \"No files found in binary data.\",\n        receivedKeys: Object.keys(item)   // debugging\n      }\n    }\n  ];\n}\n\nreturn fileKeys.map(key => {\n  return {\n    json: {\n      success: true,\n      fileName: binaries[key].fileName,\n      mimeType: binaries[key].mimeType,\n      fieldName: key\n    },\n    binary: {\n      data: binaries[key]\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6416,
+        3456
+      ],
+      "id": "d3b1fe41-a444-413d-8920-7866d902fb26",
+      "name": "Uploaded_Multiple Files Handle"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -5728,
+        4512
+      ],
+      "id": "39689a11-e2f0-45a2-b35b-d777616a1364",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6gDYNAoDK07pVT3M",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Extract ALL text and ALL key fields from this uploaded document.\n\nImportant:\n- Use ONLY the binary file.\n- DO NOT guess any missing information.\n- Return ONLY JSON output.\n\nHere is the file:\n\nBinary Data Field Name: {{ $binary.data }}\nMimeType: {{$binary.data.mimeType}}\nFileName: {{$binary.data.fileName}}\n",
+        "options": {
+          "systemMessage": "=You are a DOCUMENT EXTRACTION AI ASSISTANT.\n\nYour job:\n1. Read ONLY the uploaded binary file.\n2. Extract EXACT text from the document—NO guessing.\n3. Identify the correct document type based ONLY on visible text.\n4. Extract all key fields EXACTLY as shown in the uploaded file.\n5. Never assume or create fake data. \n   If a field does not exist → return null.\n6. Never correct spelling, never format amounts, never modify data.\n7. Support images (JPG, PNG), PDFs, and scanned documents.\n8. Output JSON only.\n\nEXTRACTION RULES:\n- \"text_raw\" = full text exactly from document (no edits)\n- \"fields\" = only fields actually visible on the document\n- If multiple pages → combine all pages\n- If multiple files uploaded → process one-by-one and generate array\n- NO additional explanation. NO extra words. ONLY JSON.\n\nYour OCR must follow: \n- No guessing names\n- No random dates\n- No random bank names\n- Only extract what is exactly readable from the uploaded document.\n\nIf file is missing, empty, or undefined → return:\n{\n  \"success\": false,\n  \"message\": \"No binary file found.\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -5728,
+        4304
+      ],
+      "id": "48ceb547-ed94-4b6d-b0d5-88955d4d9713",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the incoming item (Google Drive file)\nconst file = $json;\n\n// Split the name by '-' to get applicant_name and document_type\nlet [applicant_name, document_type] = file.name.split('-');\n\n// Trim any extra spaces\napplicant_name = applicant_name.trim();\ndocument_type = document_type ? document_type.trim() : \"\";\n\n// Construct separate JSON\nconst output = {\n    \"applicant_name\": applicant_name,\n    \"document_type\": document_type,\n  \"file_name\": file.name,\n    \"folder_name\": document_type, // if you want folder same as document type\n    \"category\": \"Mandatory\", // default value, can modify if needed\n    \"file_id\": file.id,\n    \"mimeType\": file.mimeType\n};\n\n// Return as single item for n8n\nreturn [{ json: output }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1744,
+        3632
+      ],
+      "id": "5029830d-0053-41fc-b0da-1be105958e1d",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14tsxq0Gnk4EwfmsGeykyhg42h3SGc0AmfIvl4WIRxo8",
+          "mode": "list",
+          "cachedResultName": "Visa_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14tsxq0Gnk4EwfmsGeykyhg42h3SGc0AmfIvl4WIRxo8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14tsxq0Gnk4EwfmsGeykyhg42h3SGc0AmfIvl4WIRxo8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "google Drive ID": "={{ $json.file_id }}",
+            "applicant_name": "={{ $json.applicant_name }}",
+            "file_name": "={{ $json.file_name }}",
+            "Document _Type ": "={{ $json.document_type }}",
+            "Uploaded_Date": "={{ $now.toFormat(\"yyyy-MM-dd\") }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "applicant_name",
+              "displayName": "applicant_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "file_name",
+              "displayName": "file_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "google Drive ID",
+              "displayName": "google Drive ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Document _Type ",
+              "displayName": "Document _Type ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Uploaded_Date",
+              "displayName": "Uploaded_Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1520,
+        3632
+      ],
+      "id": "10318391-1dc4-45a2-af47-b128f1c789eb",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "lNy9BX92OFZS8I2b",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fe0bab2b-fbb6-4c1b-8200-2443f4a33b38",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "Mandatory",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3216,
+        3632
+      ],
+      "id": "692d89fc-b3f2-40ec-8b65-386ad3616e02",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=FileName: {{ $('Upload trigger').first().binary.file1.fileName }}\nUserMessage: {{ $json.output }}\nMimeType: {{ $('Upload trigger').first().binary.file1.mimeType }}\n\nClassify this additional file.\n",
+        "options": {
+          "systemMessage": "=You are an Additional Document Classifier.\n\nYour task:\n- Read FileName + Message.\n- If document is NOT a mandatory visa document,\n  classify into one of:\n\n1. BankStatement\n2. IDProof\n3. OfferLetter\n4. ExperienceLetter\n5. TravelDocument\n6. SupportingDocument\n7. GeneralAdditional\n\nRules:\n- Never hallucinate.\n- If unsure → \"GeneralAdditional\".\n\nOutput ONLY JSON:\n{\n  \"category\": \"<folderName>\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -2992,
+        3872
+      ],
+      "id": "328d4ef9-2689-4647-a623-f84ff916f1b1",
+      "name": "Additional AI Agent",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following document data and provide the requested structured output.\n\n--- DOCUMENT DATA ---\nFile Name: {{ $binary.data.fileName }}\nMime Type: {{ $binary.data.mimeType }}\nDocument Content:{{ $('Combine_All_Response').item.json.combined_prompt }}\n\nClassify this file.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a highly reliable and strict Visa Document File Classifier.\n\nYour ONLY job is to:\n1. Read the file name, MIME type, and document text of the current item.\n2. Detect:\n    - Applicant Name (if mentioned)\n    - Document Type (passport, photo, bank statement, etc.)\n    - PassportNo (Corrected field name)\n    - Folder Category (Mandatory or Additional)\n\nYou MUST output ONLY a clean JSON object with these 5 keys:\n{\n  \"applicant_name\": \"\",\n  \"document_type\": \"\",\n  \"passport_number\": \"\", // Field name corrected for standard JSON use\n  \"category\": \"\"\n}\n\nSTRICT RULES:\n(Mandatory Folder List, Category rules, etc., are excellent. Keep the remaining rules as they are.)"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -3568,
+        3632
+      ],
+      "id": "2c73b481-cdd5-4b96-843f-f497ead3d5ab",
+      "name": "Mandatory AI Agent"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "={{ $('Upload trigger').first().binary.file1}}",
+        "name": "={{ $json.applicant_name }}-{{ $json.document_type }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1JGHi31InFTjikqabac21bLSw9_CLwHLV",
+          "mode": "list",
+          "cachedResultName": "Additional Files",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1JGHi31InFTjikqabac21bLSw9_CLwHLV"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2192,
+        3824
+      ],
+      "id": "9ff4b1e9-5523-4f1a-8702-e9b82b3c1d66",
+      "name": "Upload Additional File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZLJCNJMUi3ay7K7q",
+          "name": "Google Drive account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "={{ $('Upload trigger').first().binary.file1}}",
+        "name": "={{ $json.applicant_name }}-{{ $json.document_type }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "13qS_u4BhF2fOfSesBO_VYTrFNmMjjevF",
+          "mode": "list",
+          "cachedResultName": "Mandatory Files",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/13qS_u4BhF2fOfSesBO_VYTrFNmMjjevF"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2192,
+        3632
+      ],
+      "id": "5caa640f-d8e3-48cf-8e03-18b94c41dee7",
+      "name": "Upload Mandatory File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZLJCNJMUi3ay7K7q",
+          "name": "Google Drive account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "Mandatory",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e4b99979-4019-4540-bce4-439db3539981"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Mandatory"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4858ba45-b9ad-480e-89d6-3ec86b9dd175",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "Additional",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Additional"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -2416,
+        3632
+      ],
+      "id": "c21d663e-f0ad-423c-823f-303ab082d4bc",
+      "name": "Route By Mandatory/Additional"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawOutput = $json[\"output\"];\n\n// Remove ```json and ``` wrappers\nconst cleaned = rawOutput.replace(/```json\\s*|```/g, \"\");\n\n// Parse the string to actual JSON\nconst parsed = JSON.parse(cleaned);\n\n// Return\nreturn parsed;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2640,
+        3632
+      ],
+      "id": "0a518afb-9319-48d2-ad9d-374e02d1310c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -2928,
+        4096
+      ],
+      "id": "98de924a-7496-4db7-b79a-a4d4ae6af840",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6gDYNAoDK07pVT3M",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -3504,
+        3856
+      ],
+      "id": "e675d7aa-588d-49cf-94f3-0ac3b3c1376b",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6gDYNAoDK07pVT3M",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "={{ $json.name }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1968,
+        3632
+      ],
+      "id": "7e1042a7-6a99-48ae-986b-3cfc922b8317",
+      "name": "Rename File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZLJCNJMUi3ay7K7q",
+          "name": "Google Drive account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "application.vnd",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "3cbe905b-6434-444a-9a87-b35dba70c6cd"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "XLSX"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "16d93dce-6d5d-4193-af3f-9db59b1d088d",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "00f4e60a-7f2b-4c9d-aa14-9a165b946ac3",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "text/plain",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TEXT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5c85ef68-eaae-4314-9a15-f07655b6093d",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CSV"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1c6c471c-fbc2-43fc-a1f4-ba40256f4f13",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "application/xml",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "XML"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a04918ed-4d2a-44f1-8319-0d5296b11f44",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "application/json",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "JSON"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ff84fe34-0c5f-4cf7-af3b-2dab535a2fff",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "=",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "XLS"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "63fb6117-bb35-4311-9938-08dcbe15df18",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "Alternative Files",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Alternative Files"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a69d6173-8662-4cef-94e4-038a9bb768f9",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "image/png",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "IMAGE/png"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "eb8ebb87-f186-4785-9598-76acf3667067",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "Photo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PHOTO"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "86fac5ab-22f1-4f38-bccb-1878327d344b",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DOCUMENT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "41c1d5c3-3448-4555-a47b-48ce1047d3e1",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "application/rtf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RTF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -6192,
+        3296
+      ],
+      "id": "bede6fb7-c6bd-49fd-b2a0-1ff39bf32ff5",
+      "name": "Extract Document To Text"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst allItems = $input.all(); \nlet combinedData = {};\n\nfor (const item of allItems) {\n    const currentJson = item.json;\n  \n    Object.assign(combinedData, currentJson);\n}\n\nreturn [{\n  json: combinedData\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5680,
+        2928
+      ],
+      "id": "f8b134ae-5f08-4009-902d-7ebf7f60484e",
+      "name": "EXCEL Column Format"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "binaryPropertyName": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -5680,
+        3888
+      ],
+      "id": "1700e049-de8c-4caf-a23f-f9b4e7ecba22",
+      "name": "JSON"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -5968,
+        2928
+      ],
+      "id": "420395fc-a663-4df0-b6e1-b06d13bd5c7f",
+      "name": "XLSX"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "destinationKey": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -5680,
+        3312
+      ],
+      "id": "8bd23a91-e633-43bd-a892-c8fa15d1125c",
+      "name": "TEXT"
+    },
+    {
+      "parameters": {
+        "operation": "xml",
+        "binaryPropertyName": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -5680,
+        3696
+      ],
+      "id": "d89a4137-6c14-4b96-933d-539da44ff623",
+      "name": "XML"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -5680,
+        3504
+      ],
+      "id": "fdf6740f-bcfe-4aed-a133-d2f5cea159e9",
+      "name": "CSV"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -5680,
+        3120
+      ],
+      "id": "e60dfe3e-a0ff-485d-811f-45b928a3d887",
+      "name": "PDF"
+    },
+    {
+      "parameters": {
+        "numberInputs": 9
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -5392,
+        3520
+      ],
+      "id": "b4a213fa-03ad-4086-b987-f6fb6e7a9a42",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "5b9c31ab-fe3d-445e-b246-654f7a3f67d3",
+      "name": "Respond to Webhook - Document",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -1296,
+        3632
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.response }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "22cfc936-53a4-4206-b92d-c7f2c0c8954a",
+      "name": "Send Response to User",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -6192,
+        4784
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "response",
+              "value": "=Your application status:\n\nCountry: {{ $json.userData.country || \"Not set\" }}\nVisa Type: {{ $json.userData.visa_type || \"Not set\" }}\nPassport Type: {{ $json.userData.passport_type || \"Not set\" }}\nDocuments: {{ $json.userData.documents.length }} uploaded\nPayment: {{ $json.userData.payment_status || \"Pending\" }}\nApplication ID: {{ $json.userData.application_id || \"Not submitted\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8710039b-88b6-47b3-98a9-09fc9836292d",
+      "name": "Send Status Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -6416,
+        4976
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "response",
+              "value": "=Please complete your payment using this link: {{ $json.short_url }}. Once paid, send \"payment done\" to continue.",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "payment_link",
+              "value": "={{ $json.short_url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e08db23a-16fc-4644-ab12-31de79263703",
+      "name": "Send Payment Link Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -6416,
+        4448
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Workflow Configuration').first().json.razorpayApiUrl }}/payments/{{ $json.body.razorpay_payment_id || $json.query.razorpay_payment_id }}",
+        "options": {}
+      },
+      "id": "89643afd-a095-48a0-b891-ab01c301d864",
+      "name": "Verify Razorpay Payment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -7664,
+        4592
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.razorpayApiUrl }}/payment_links",
+        "authentication": "genericCredentialType",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"amount\": {{ $('Workflow Configuration').first().json.paymentAmount * 100 }},\n  \"currency\": \"INR\",\n  \"description\": \"Visa Application Fee - {{ $json.userData.country }} {{ $json.userData.visa_type }}\",\n  \"customer\": {\n    \"name\": \"{{ $json.userData.name || 'Applicant' }}\",\n    \"email\": \"{{ $json.userData.email || 'applicant@example.com' }}\"\n  },\n  \"notify\": {\n    \"sms\": true,\n    \"email\": true\n  },\n  \"callback_url\": \"{{ $('Workflow Configuration').first().json.webhookUrl }}\",\n  \"callback_method\": \"get\"\n}",
+        "options": {}
+      },
+      "id": "bb2600d9-5498-49a8-bc74-c38f371d1cd7",
+      "name": "Create Razorpay Payment Link",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -6640,
+        4448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA",
+          "mode": "list",
+          "cachedResultName": "Visa_File_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "Country": "={{ $json.country }}",
+            "Visa Type": "={{ $json.visa_type }}",
+            "DOB": "={{ $json.dob }}",
+            "Name": "={{ $json.first_name }}{{ $json.last_name }}",
+            "Nationality": "={{ $json.nationality }}",
+            "Passport Number ": "={{ $json.passport_number }}",
+            "Email ": "={{ $json.email }}",
+            "Phone ": "={{ $json.phone }}",
+            "Address": "={{ $json.address }}",
+            "Destination City ": "={{ $json.destination_city }}",
+            "Travel Date": "={{ $json.travel_date }}",
+            "Return Date": "={{ $json.return_date }}",
+            "Travel Info": "={{ $json.flight_info }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Country",
+              "displayName": "Country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Visa Type",
+              "displayName": "Visa Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "DOB",
+              "displayName": "DOB",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nationality",
+              "displayName": "Nationality",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Passport Number ",
+              "displayName": "Passport Number ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email ",
+              "displayName": "Email ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone ",
+              "displayName": "Phone ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Address",
+              "displayName": "Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Destination City ",
+              "displayName": "Destination City ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Travel Date",
+              "displayName": "Travel Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Return Date",
+              "displayName": "Return Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Travel Info",
+              "displayName": "Travel Info",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -7440,
+        4304
+      ],
+      "id": "9a7fd1e7-56fe-4b36-a8d5-6d129d7b49e7",
+      "name": "Store Visa User Data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "lNy9BX92OFZS8I2b",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data",
+          "fileName": "={{ $json.applicant_name }}-{{ $json.document_type }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -8464,
+        6080
+      ],
+      "id": "f334cc19-8be5-4eec-8c06-0974ab8560bc",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZLJCNJMUi3ay7K7q",
+          "name": "Google Drive account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "message",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        -8464,
+        6304
+      ],
+      "id": "08fb7032-191d-4aca-ba36-4a5e0db4c61c",
+      "name": "Respond to Chat2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are a Professional Global Visa Application & Retrieval AI Assistant working for a Licensed Visa Service Provider.\n{{ $json.chatInput }}\n\n------------------------------------\nINITIAL GREETING (MANDATORY)\n------------------------------------\n\nAt the very first user message, you MUST reply ONLY:\n\n\"Hello! I am your Visa Application Assistant.\nI will help you with your visa process step by step.\n\nWhich country are you applying visa for?\"\n\n------------------------------------\nPRIMARY ROLE (STRICT)\n------------------------------------\n\nYour ONLY responsibilities are to:\n\n- Collect visa applicant BASIC DETAILS step-by-step.\n- Handle Passport Database Verification.\n- Handle EXISTING vs NEW Document Selection Flow.\n- Handle Country & Visa Type based Document Requirement Flow.\n- Handle Manual Quality Check (QC) Stop & Resume Logic.\n- Store ONLY BASIC DETAILS in structured database format.\n- Track ONLY Document STATUS (Uploaded / Approved / Rejected).\n- NEVER store any document file, image, PDF, or binary data.\n- NEVER reveal backend, API, database, automation, or system logic.\n- Ask ONLY ONE question per message.\n- NEVER skip steps.\n- ALWAYS follow STOP & WAIT strictly.\n\n------------------------------------\nSYSTEM INPUT RULE (MANDATORY)\n------------------------------------\n\nYou will ALWAYS receive user input inside:\n\"message\" field only.\n\n------------------------------------\nSTRICT START FLOW (MANDATORY)\n------------------------------------\n\n1. Ask:\n\"What type of visa do you need? (Tourist / Business / Student / Work / Visit / Transit)\"\n\n2. Ask:\n\"How many applicants are applying for this visa?\"\n\n------------------------------------\nPASSPORT DATABASE VERIFICATION (CRITICAL)\n------------------------------------\n\nAfter applicant count is confirmed, you MUST ask only:\n\n\"Please enter Passport Number in this format only:\nPassport : A1234567 / 7856463 / K9876543\"\n\nAfter Passport Number is received, you MUST reply ONLY:\n\n\"⏳ Passport received. Verifying records...\"\n\nThen WAIT for backend response.\n❌ Do NOT ask any question.\n❌ Do NOT continue flow.\n\n------------------------------------\nBACKEND RESPONSE HANDLING\n------------------------------------\n\nIf BACKEND sends:\n\n{\n  \"status\": \"not_found\",\n  \"nextStep\": \"start_new_application\",\n  \"message\": \"No previous documents found. New visa application must be started.\"\n}\n\nYou MUST:\n\n1. Reply ONLY:\n\n\"✅ No previous record found. We will proceed with a new visa application.\"\n\n2. **Do NOT ask any Yes/No.**  \n3. **Immediately continue collecting ALL required visa details** step by step (Travel Details, Personal Details, Passport Details, Occupation, Travel History, Family Details, Emergency Contact, Accommodation) without waiting for user confirmation.  \n\n---\n\nIf BACKEND sends: MATCH FOUND  \n\nYou MUST ask ONLY:\n\n\"✅ Your previous documents were found.\nWould you like to use these existing documents or upload new ones?\n(Use Existing / Upload New)\"\n\nIf user selects:\n✅ \"Use Existing\"\n\nYou MUST reply ONLY:\n\n\"⏳ Fetching and processing your existing documents for verification...\"\n\nThen STOP and WAIT for backend QC.\n\nIf user selects:\n✅ \"Upload New\"\n\nYou MUST first collect ALL required visa details step by step, then:\n\n\"Please upload only the required documents one by one.\"\n\n- Every uploaded document → reply ONLY:\n\n\"⏳ Document received. QC in progress.\"\n- Wait for QC approval before asking next document.\n\n---\n\nQC RESULT HANDLING\n\nIf QC Approved:\n\"✅ Document approved.\"\n\nIf QC Rejected:\n\"❌ Document rejected. Please re-upload the correct document.\"\n\n---\n\nAGE DETECTION (AUTO)\n\nOnce Date of Birth is collected:\n- If age ≥ 18 → ADULT\n- If age < 18 → CHILD\n- NEVER ask Adult questions to a Child.\n\n---\n\nADULT BASIC DETAILS COLLECTION (STRICT ORDER)\n------------------------------------\n[Travel Details → Personal Details → Passport Details → Occupation → Travel History → Family Details → Emergency Contact → Accommodation]\n\nCHILD BASIC DETAILS COLLECTION\n------------------------------------\n[Name → DOB → Gender → Nationality → Passport Details → Father/Mother → Guardian → Travel Mode]\n\nDOCUMENT RULE (DYNAMIC)\n------------------------------------\nDocuments MUST be loaded dynamically based on:\n- Country\n- Visa Type\n- Applicant Type\n\nGOOGLE SHEET STORAGE RULE\n------------------------------------\nStore ONLY:\n- Country, Visa Type, Applicant Type, Personal Details, Passport Details, Occupation Details, Travel History, Family Details, Emergency Contact, Accommodation\n- Document STATUS only (Uploaded / Approved / Rejected)\n- NEVER store files, links, images, PDFs, or binary data\n\nFINAL OUTPUT (MANDATORY)\n------------------------------------\nAfter ALL applicant BASIC DETAILS are completed, output ONLY:\n\n{\n  \"status\": \"basic_details_completed\",\n  \"country\": \"\",\n  \"visa_type\": \"\",\n  \"total_applicants\": \"\",\n  \"applicants\": []\n}\n\nThen ask:\n\n\"✅ Basic details saved successfully. Shall we proceed with document upload?\"\n",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -8240,
+        4320
+      ],
+      "id": "c3a4cd26-1671-46d9-8ec9-988b96ffccdb",
+      "name": "Visa Applicant Agent"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "Passport",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "c6710c32-efde-4a76-be89-c7f978c6cea3"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Passport"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "64bfc7b1-3fb0-4897-ac51-cd76cb8e4c26",
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "existing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Existing Document"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2319cd29-59e5-453f-baa5-de7a85ac0fde",
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "new",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "New Document"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9bb5768b-3fab-42ab-ad76-085920681a1c",
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "Details Sucessfully",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Requirement All Details"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2884d157-c062-45d2-ac7a-83228c70e71c",
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "Payment Initiate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Payement Initiate"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ed5a10bb-4677-4749-a67f-fb4c565d382c",
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "verify",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Verify payment"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3a4b5a50-6142-4c12-b537-66c1bfe2b071",
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "api",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Auto fill "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -7888,
+        4368
+      ],
+      "id": "02a4f0c7-27cb-46b2-8ea4-73474593625b",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -6864,
+        3616
+      ],
+      "id": "523e31ce-24fe-418a-b7a6-61b0684fac9c",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZLJCNJMUi3ay7K7q",
+          "name": "Google Drive account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $json.Passport_number }}",
+        "filter": {
+          "driveId": {
+            "__rl": true,
+            "value": "My Drive",
+            "mode": "list",
+            "cachedResultName": "My Drive",
+            "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1Y1yCyHYrvwljnhNdoSvTyaKvbSNbjr8x",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -7664,
+        3760
+      ],
+      "id": "d84037cb-859c-40ed-996f-886cd75d1e3e",
+      "name": "Search files and folders1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZLJCNJMUi3ay7K7q",
+          "name": "Google Drive account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -7440,
+        3760
+      ],
+      "id": "432d16ca-354e-46be-abc3-ebfea9ebb417",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        -7152,
+        3808
+      ],
+      "id": "ab320f70-d7a7-4931-becc-fd0f6ac25d1a"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "visa-application",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "cfb40866-ef1e-4d16-8e45-81bca8b0a5ce",
+      "name": "Visa Apply Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -8464,
+        5632
+      ],
+      "webhookId": "5bf49ee5-470c-4e7c-b235-f198b8d0bbf9",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -8464,
+        5856
+      ],
+      "id": "2d116910-f423-4906-9379-69904ecc3bc7",
+      "name": "Respond to Webhook",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -8112,
+        4544
+      ],
+      "id": "bbbe8786-b9de-4e60-95f5-a9a05ba398cc",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "19OYH9Cnywa1G32FoWKd6wlboGeBDlJLfZQUmcmwtQS0",
+          "mode": "list",
+          "cachedResultName": "Visa Auto fill_Dummy DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19OYH9Cnywa1G32FoWKd6wlboGeBDlJLfZQUmcmwtQS0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Visa Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19OYH9Cnywa1G32FoWKd6wlboGeBDlJLfZQUmcmwtQS0/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Given Name",
+              "lookupValue": "Rajesh"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "06d37483-d3cd-433d-9b67-68ad3605713e",
+      "name": "Fetch User Data from Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -7664,
+        4784
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "lNy9BX92OFZS8I2b",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst passportNo = $('Webhook Trigger').first().json.body.passport_no;\nconst country = $('Webhook Trigger').first().json.body.country;\n\n// Find matching record\nconst userRecord = items.find(item => item.json.passport_no === passportNo);\n\nif (!userRecord) {\n  throw new Error(`No record found for passport number: ${passportNo}`);\n}\n\n// Return clean user data\nreturn [{\n  json: {\n    passport_no: userRecord.json.passport_no,\n    name: userRecord.json.name,\n    dob: userRecord.json.dob,\n    gender: userRecord.json.gender,\n    address: userRecord.json.address,\n    email: userRecord.json.email,\n    photo_url: userRecord.json.photo_url,\n    passport_pdf_url: userRecord.json.passport_pdf_url,\n    visa_type: userRecord.json.visa_type,\n    country: country\n  }\n}];"
+      },
+      "id": "a0c007d8-0b8e-4afb-b861-2bebf70e2d18",
+      "name": "Match Passport Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -7440,
+        4784
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=file:///C:/Users/Developer-27/Downloads/VisaAuto%20Fill%20Form.html",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"visa_type\": \"{{ $json.visa_type }}\",\n  \"visa_category\": \"{{ $json.visa_category }}\",\n  \"destination_country\": \"{{ $json.country }}\",\n  \"nationality\": \"{{ $json.nationality }}\",\n  \"priority\": \"{{ $json.process_priority }}\",\n\n  \"travel\": {\n    \"from_city\": \"{{ $json.origin_city }}\",\n    \"to_city\": \"{{ $json.destination_city }}\",\n    \"departure_date\": \"{{ $json.travel_start }}\",\n    \"return_date\": \"{{ $json.travel_end }}\"\n  },\n\n  \"passenger\": {\n    \"title\": \"{{ $json.title }}\",\n    \"first_name\": \"{{ $json.given_name }}\",\n    \"last_name\": \"{{ $json.surname }}\",\n    \"gender\": \"{{ $json.gender }}\",\n    \"date_of_birth\": \"{{ $json.dob }}\",\n    \"place_of_birth\": \"{{ $json.place_of_birth }}\",\n    \"nationality\": \"{{ $json.nationality }}\"\n  },\n\n  \"passport\": {\n    \"passport_number\": \"{{ $json.passport_no }}\",\n    \"issue_date\": \"{{ $json.passport_issue_date }}\",\n    \"expiry_date\": \"{{ $json.passport_expiry_date }}\"\n  },\n\n  \"contact\": {\n    \"email\": \"{{ $json.email }}\",\n    \"mobile\": \"{{ $json.mobile }}\"\n  },\n\n  \"address\": \"{{ $json.address }}\"\n}\n",
+        "options": {}
+      },
+      "id": "6fb3efb7-26ea-4540-93fc-4a83e60f8f2d",
+      "name": "Auto Fill Visa API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -7152,
+        4784
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.visaApiBaseUrl }}/finalSubmit",
+        "authentication": "predefinedCredentialType",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"application_id\": \"{{ $('Auto Fill Visa API').first().json.application_id }}\"\n}",
+        "options": {}
+      },
+      "id": "daa027c2-9be1-4bd4-a023-7711e0eddd26",
+      "name": "Final Visa Submit API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -6864,
+        4784
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.pdfGeneratorApiUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $('Workflow Configuration').first().json.pdfGeneratorApiKey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"html\": \"<html><body><h1>Visa Application Confirmation</h1><p><strong>Name:</strong> {{ $('Match Passport Record').first().json.name }}</p><p><strong>Passport No:</strong> {{ $('Match Passport Record').first().json.passport_no }}</p><p><strong>Country:</strong> {{ $('Match Passport Record').first().json.country }}</p><p><strong>Visa Type:</strong> {{ $('Match Passport Record').first().json.visa_type }}</p><p><strong>Reference No:</strong> {{ $json.reference_no }}</p><p><strong>Status:</strong> {{ $json.status }}</p><p><strong>Submitted Date:</strong> {{ $now.format('yyyy-MM-dd HH:mm:ss') }}</p></body></html>\",\n  \"fileName\": \"visa_application_{{ $('Match Passport Record').first().json.passport_no }}.pdf\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "385a278f-7c3b-4601-ad4b-230d3ec4a231",
+      "name": "Generate PDF from HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -6640,
+        4784
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Match Passport Record').first().json.email }}",
+        "subject": "=Your Visa Application Submitted Successfully - Ref: {{ $('Final Visa Submit API').first().json.reference_no }}",
+        "message": "=<p>Dear ={{ $('Match Passport Record').first().json.name }},</p><p>Your visa application has been successfully submitted.</p><p><strong>Reference Number:</strong> ={{ $('Final Visa Submit API').first().json.reference_no }}</p><p><strong>Country:</strong> ={{ $('Match Passport Record').first().json.country }}</p><p><strong>Visa Type:</strong> ={{ $('Match Passport Record').first().json.visa_type }}</p><p>Please find your application confirmation attached as PDF.</p><p>Best regards,<br>Visa Processing Team</p>",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "id": "eadc8fd3-eaff-4275-a0e6-102f16012aae",
+      "name": "Send Email with PDF",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -6416,
+        4784
+      ],
+      "webhookId": "cae91206-6786-4e95-a6f7-4c5158ecd1eb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "QzchmdlasWTzGOjQ",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1eLxtzue2qM6qbKKItNSi0tkO4pO8k0dx",
+          "mode": "list",
+          "cachedResultName": "-bank statement",
+          "cachedResultUrl": "https://drive.google.com/file/d/1eLxtzue2qM6qbKKItNSi0tkO4pO8k0dx/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -7152,
+        3616
+      ],
+      "id": "a25ca484-126d-4286-b826-01ce9dc1d9eb",
+      "name": "Donload Retrive File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ZLJCNJMUi3ay7K7q",
+          "name": "Google Drive account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are requesting document retrieval for a visa applicant.\n\nProvide the following to the Retrieval AI Agent:\n- Passport Number: {{ $('Edit Fields2').item.json.Passport_number }}\n- Applicant Name (optional): {full_name}\n- Instruction: \"Check if documents exist and return available documents or status for Quality Check.\"\n\nExample request:\n\"Retrieve documents for Passport Number A1234567 and confirm whether existing documents can be used or new uploads are needed.\"\n",
+        "options": {
+          "systemMessage": "=You are a professional Visa Document Retrieval AI Agent.\n\nYour job is STRICTLY LIMITED to:\n- Reading data from a connected Google Sheet / Database.\n- Searching records using a Passport Number.\n- Returning document metadata in structured JSON format.\n- Forwarding document references for Quality Check (QC).\n- You MUST NEVER write, edit, delete, or modify any Google Sheet data.\n\n---------------------------------------------------\nPRIMARY WORKFLOW (MANDATORY)\n---------------------------------------------------\n\n1. You will ALWAYS receive a Passport Number as input.\n\n2. You MUST immediately READ the connected Google Sheet / Database\n   and SEARCH for any record that MATCHES the given Passport Number.\n\n---------------------------------------------------\nIF PASSPORT NUMBER IS NOT FOUND\n---------------------------------------------------\n\nYou MUST return ONLY this structured JSON:\n\n{\n  \"passportNumber\": \"{PASSPORT_NO}\",\n  \"status\": \"not_found\",\n  \"nextStep\": \"start_new_application\",\n  \"message\": \"✅ No previous record found. We will proceed with a new visa application.\",\n  \"uploadNewDocument\": true,\n  \"useExistingDocument\": false,\n  \"downloadLinks\": []\n}\n\n\n⚠️ IMPORTANT:\n- You MUST NOT ask any question.\n- You MUST NOT interact with the user.\n- You MUST ONLY signal the Visa Application AI Agent to START NEW APPLICATION.\n\n---------------------------------------------------\nIF PASSPORT NUMBER IS FOUND\n---------------------------------------------------\n\nYou MUST return ONLY this structured JSON:\n\n{\n  \"passportNumber\": \"{PASSPORT_NO}\",\n  \"status\": \"found\",\n  \"nextStep\": \"ask_existing_or_new\",\n  \"message\": \"✅ Previous documents found. Would you like to use these existing documents or upload new ones? (Use Existing / Upload New)\",\n  \"uploadNewDocument\": true,\n  \"useExistingDocument\": true,\n  \"downloadLinks\": [\"secure_url_1\", \"secure_url_2\"],\n  \"documentSummary\": [\n    {\n      \"type\": \"Passport Copy\",\n      \"uploadDate\": \"YYYY-MM-DD\",\n      \"status\": \"verified\"\n    }\n  ]\n}\n\n\n---------------------------------------------------\nUSER CHOICE HANDLING\n---------------------------------------------------\n\nIf input = \"Use Existing\"\nReturn ONLY:\n\n{\n  \"passportNumber\": \"{PASSPORT_NO}\",\n  \"status\": \"forwarded_for_qc\",\n  \"nextStep\": \"qc_processing\",\n  \"message\": \"Documents forwarded for Quality Control.\",\n  \"qcForwarded\": true\n}\n\nIf input = \"Upload New\"\nReturn ONLY:\n\n{\n  \"passportNumber\": \"{PASSPORT_NO}\",\n  \"status\": \"upload_new\",\n  \"nextStep\": \"new_document_upload\",\n  \"message\": \"User will upload new documents.\",\n  \"qcForwarded\": false\n}\n\n---------------------------------------------------\nSTRICT RULES\n---------------------------------------------------\n\n✅ You ONLY READ Google Sheet  \n✅ You NEVER modify Google Sheet  \n✅ You NEVER talk to user  \n✅ You ONLY talk to Visa Application AI Agent  \n✅ You ONLY respond in JSON  \n✅ You NEVER perform QC  \n✅ You MUST log every lookup internally  \n✅ You MUST always send `nextStep` field  \n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -7216,
+        4112
+      ],
+      "id": "964b4e9c-a766-4d2d-b604-02235bd7f989",
+      "name": "Retreivel AI Agent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "23edb5bc-130b-4688-96b3-286f791e9768",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "found",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "122381cf-b258-4236-a671-66419a079c5d",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -6640,
+        4112
+      ],
+      "id": "2582bbb0-0b5b-4151-8d6b-dc2c5533465e",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the first row (example)\nconst row = $items(\"Get rows\")[0].json;\n\n// 2. Check if Passport exists\nif (!row.Passport || row.Passport === \"\") {\n    return [\n        {\n            status: \"error\",\n            message: \"Passport field is empty\"\n        }\n    ];\n}\n\n// 3. Passport exists → normal flow\nreturn [\n    {\n        status: \"success\",\n        passportNumber: row.Passport\n    }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8464,
+        5200
+      ],
+      "id": "4060c286-602d-4d95-bb6b-f7edeab08d9e",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA",
+          "mode": "list",
+          "cachedResultName": "Visa_File_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Passport_number",
+              "lookupValue": "={{ $('Edit Fields2').item.json.Passport_number }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -7088,
+        4336
+      ],
+      "id": "1735a5a4-aae7-48da-9d4b-815e5b1b2d2a",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "lNy9BX92OFZS8I2b",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 1: Get the raw output string\nconst raw = $json.output;\n\n// Step 2: Remove ```json and ```\nconst cleaned = raw\n  .replace(/```json/g, \"\")\n  .replace(/```/g, \"\")\n  .trim();\n\n// Step 3: Convert string to real JSON object\nconst data = JSON.parse(cleaned);\n\n// Step 4: Return as proper separate fields\nreturn [{\n  passportNumber: data.passportNumber,\n  status: data.status,\n  message: data.message,\n  uploadNewDocument: data.uploadNewDocument,\n  useExistingDocument: data.useExistingDocument,\n  downloadLinks: data.downloadLinks\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6864,
+        4112
+      ],
+      "id": "2678dd53-ba92-4b6c-b10e-af360770c2dc",
+      "name": "Code in JavaScript3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Retreivel AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Retreivel AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seperated Json": {
+      "main": [
+        [
+          {
+            "node": "Store Visa User Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Visa Applicant Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Google Gemini Chat Model9": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Visa Applicant Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Validity Check",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validity Check": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine_All_Response": {
+      "main": [
+        [
+          {
+            "node": "Validity Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "File name Automatic Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "File name Automatic Create",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File name Automatic Create": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Type": {
+      "main": [
+        [
+          {
+            "node": "Uploaded_Multiple Files Handle",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Uploaded_Multiple Files Handle": {
+      "main": [
+        [
+          {
+            "node": "Extract Document To Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Mandatory AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Additional AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Additional AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mandatory AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Additional File": {
+      "main": [
+        [
+          {
+            "node": "Rename File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Mandatory File": {
+      "main": [
+        [
+          {
+            "node": "Rename File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route By Mandatory/Additional": {
+      "main": [
+        [
+          {
+            "node": "Upload Mandatory File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upload Additional File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Route By Mandatory/Additional",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Additional AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Mandatory AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rename File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Document To Text": {
+      "main": [
+        [
+          {
+            "node": "XLSX",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TEXT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CSV",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "XML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "JSON",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RTF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EXCEL Column Format": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "XLSX": {
+      "main": [
+        [
+          {
+            "node": "EXCEL Column Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RTF": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "JSON": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "TEXT": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "XML": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "CSV": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "PDF": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Combine_All_Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook - Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Status Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response to User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Payment Link Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response to User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Razorpay Payment Link": {
+      "main": [
+        [
+          {
+            "node": "Send Payment Link Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        []
+      ]
+    },
+    "Visa Applicant Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Chat3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search files and folders1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Type",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Seperated Json",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Razorpay Payment Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Verify Razorpay Payment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch User Data from Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Check Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Donload Retrive File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Visa Apply Trigger": {
+      "main": [
+        []
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Visa Applicant Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch User Data from Google Sheet": {
+      "main": [
+        [
+          {
+            "node": "Match Passport Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Passport Record": {
+      "main": [
+        [
+          {
+            "node": "Auto Fill Visa API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto Fill Visa API": {
+      "main": [
+        [
+          {
+            "node": "Final Visa Submit API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Visa Submit API": {
+      "main": [
+        [
+          {
+            "node": "Generate PDF from HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate PDF from HTML": {
+      "main": [
+        [
+          {
+            "node": "Send Email with PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email with PDF": {
+      "main": [
+        [
+          {
+            "node": "Send Response to User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Donload Retrive File": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retreivel AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Chat1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        []
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "Retreivel AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c47c52f3-3619-4f66-8b2b-9985214d57d5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6f98da50e1bcb75865875df1e18ad4f36e8b35a2cfedc9612c01becef4ac9528"
+  },
+  "id": "Js63bHpFGkFey18k",
+  "tags": []
+}

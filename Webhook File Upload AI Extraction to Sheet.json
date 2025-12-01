@@ -1,0 +1,206 @@
+{
+  "name": "Webhook File Upload AI Extraction to Sheet",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "file-upload",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "0fa60052-1c25-4403-af77-ea8753d8c493",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "48539895-eebe-43ff-ae65-9123e55f75a0"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "id": "568600ef-2f0b-4fdc-9b7d-21cdb23ce15f",
+      "name": "Extract File Content",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.data }}",
+        "options": {
+          "systemMessage": "=You are a file analysis assistant. Your task is to:\n\n1. Identify the file type from the extracted content\n2. Extract ALL important details, information, and data from the file\n3. Structure the extracted information in a clear JSON format with appropriate field names\n4. Include metadata like file type, key entities, dates, numbers, and any other relevant information\n\nReturn ONLY a JSON object with the extracted data. Use descriptive field names that match the content type."
+        }
+      },
+      "id": "5e3bdfb7-6a15-414d-8668-9659462d70ce",
+      "name": "AI Agent - File Analyzer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "94ea3e07-8152-47de-9ece-7bdefa89f695",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        208
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "Ua3xsNZL1DlyZTo5",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1_3S4W6aH0KX9i7lw5ZXeScYgmFWx0LhhB2y2zj8eOuQ",
+          "mode": "list",
+          "cachedResultName": "Ex",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_3S4W6aH0KX9i7lw5ZXeScYgmFWx0LhhB2y2zj8eOuQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_3S4W6aH0KX9i7lw5ZXeScYgmFWx0LhhB2y2zj8eOuQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Visa Number ",
+              "displayName": "Visa Number ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "UT-98213456",
+              "displayName": "UT-98213456",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "63e7ca2f-8a77-4626-9a3d-1fee49fb2606",
+      "name": "Store in Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        800,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "lNy9BX92OFZS8I2b",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract File Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract File Content": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - File Analyzer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - File Analyzer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - File Analyzer": {
+      "main": [
+        [
+          {
+            "node": "Store in Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "78dd80f5-49c9-4470-92c8-ee0cae7133c3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6f98da50e1bcb75865875df1e18ad4f36e8b35a2cfedc9612c01becef4ac9528"
+  },
+  "id": "Gm1Iu5B4GjqffnEf",
+  "tags": []
+}

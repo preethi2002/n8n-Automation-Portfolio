@@ -1,0 +1,232 @@
+{
+  "name": "N8N AI ASSISTENT",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hello! I'm your n8n Workflow Builder AI Assistant. I can help you build complete n8n workflows based on your requirements.\n\nJust describe what you want to automate, and I'll analyze your needs, select the right nodes, configure them properly, and create a working workflow for you.\n\nWhat workflow would you like me to build?",
+        "options": {
+          "loadPreviousSession": "memory"
+        }
+      },
+      "id": "602e6825-dd13-498a-b138-0f6bd363fb7a",
+      "name": "n8n Workflow Builder Chat",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        1216,
+        -672
+      ],
+      "webhookId": "9e1ee5c3-41d8-49cd-9670-a6232ca9d8c2"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are an expert n8n workflow builder AI assistant. Your role is to help users build complete, working n8n workflows based on their requirements.\n\n**Your Capabilities:**\n1. Analyze user requirements and identify needed workflow components\n2. Select appropriate n8n nodes for each task\n3. Design workflow structure with proper connections\n4. Configure node parameters correctly\n5. Generate complete workflow JSON that users can import into n8n\n\n**Your Process:**\n1. **Understand Requirements**: Ask clarifying questions if needed to fully understand what the user wants to automate\n2. **Analyze & Plan**: Use the Workflow Analysis Tool to break down the requirement into workflow steps\n3. **Select Nodes**: Use the Node Selection Tool to identify the right n8n nodes for each step\n4. **Generate Workflow**: Use the Workflow Generation Tool to create the complete workflow JSON\n5. **Deliver**: Provide the workflow JSON and clear setup instructions\n\n**Important Guidelines:**\n- Always ask for clarification if requirements are unclear\n- Consider best practices: error handling, data transformation, proper node configuration\n- Include Workflow Configuration nodes for centralized settings\n- Provide clear setup instructions for any placeholders or credentials needed\n- Test your logic before generating the final workflow\n- Be conversational and helpful - explain your decisions\n\n**Response Style:**\n- Be friendly and professional\n- Explain what you're building and why\n- Break down complex workflows into understandable steps\n- Provide actionable setup instructions\n\nStart by understanding what the user wants to build, then guide them through the process."
+        }
+      },
+      "id": "2150364c-d824-4596-aefb-febf022711b0",
+      "name": "Workflow Builder AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1776,
+        -672
+      ]
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "id": "8ee880cb-cff5-4d21-a8fc-1af217d3fcbe",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1216,
+        -448
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Analyzes user requirements and breaks them down into workflow steps, identifying triggers, actions, data transformations, and integrations needed",
+        "jsCode": "const requirement = $input.item.json.requirement || $input.item.json.query;\n\n// Analyze the requirement\nconst analysis = {\n  summary: requirement,\n  workflowType: identifyWorkflowType(requirement),\n  components: {\n    trigger: identifyTrigger(requirement),\n    actions: identifyActions(requirement),\n    transformations: identifyTransformations(requirement),\n    integrations: identifyIntegrations(requirement)\n  },\n  complexity: assessComplexity(requirement),\n  recommendations: generateRecommendations(requirement)\n};\n\nfunction identifyWorkflowType(req) {\n  const lower = req.toLowerCase();\n  if (lower.includes('schedule') || lower.includes('cron') || lower.includes('daily') || lower.includes('weekly')) return 'scheduled';\n  if (lower.includes('webhook') || lower.includes('api') || lower.includes('http')) return 'webhook';\n  if (lower.includes('chat') || lower.includes('bot') || lower.includes('conversation')) return 'chatbot';\n  if (lower.includes('email') || lower.includes('gmail')) return 'email-triggered';\n  return 'manual';\n}\n\nfunction identifyTrigger(req) {\n  const lower = req.toLowerCase();\n  if (lower.includes('schedule')) return 'Schedule Trigger';\n  if (lower.includes('webhook')) return 'Webhook';\n  if (lower.includes('chat')) return 'Chat Trigger';\n  if (lower.includes('email')) return 'Email Trigger';\n  if (lower.includes('manual')) return 'Manual Trigger';\n  return 'Webhook';\n}\n\nfunction identifyActions(req) {\n  const actions = [];\n  const lower = req.toLowerCase();\n  \n  if (lower.includes('send email') || lower.includes('gmail')) actions.push('Send Email');\n  if (lower.includes('database') || lower.includes('postgres') || lower.includes('mysql')) actions.push('Database Operation');\n  if (lower.includes('api') || lower.includes('http request')) actions.push('HTTP Request');\n  if (lower.includes('google sheets') || lower.includes('spreadsheet')) actions.push('Google Sheets');\n  if (lower.includes('slack')) actions.push('Slack Message');\n  if (lower.includes('ai') || lower.includes('gpt') || lower.includes('openai')) actions.push('AI Processing');\n  if (lower.includes('transform') || lower.includes('format') || lower.includes('convert')) actions.push('Data Transformation');\n  \n  return actions.length > 0 ? actions : ['Data Processing'];\n}\n\nfunction identifyTransformations(req) {\n  const transformations = [];\n  const lower = req.toLowerCase();\n  \n  if (lower.includes('filter') || lower.includes('condition')) transformations.push('Filtering');\n  if (lower.includes('map') || lower.includes('transform') || lower.includes('convert')) transformations.push('Data Mapping');\n  if (lower.includes('aggregate') || lower.includes('sum') || lower.includes('count')) transformations.push('Aggregation');\n  if (lower.includes('split') || lower.includes('parse')) transformations.push('Data Splitting');\n  \n  return transformations;\n}\n\nfunction identifyIntegrations(req) {\n  const integrations = [];\n  const lower = req.toLowerCase();\n  \n  if (lower.includes('google')) integrations.push('Google');\n  if (lower.includes('slack')) integrations.push('Slack');\n  if (lower.includes('github')) integrations.push('GitHub');\n  if (lower.includes('openai') || lower.includes('gpt')) integrations.push('OpenAI');\n  if (lower.includes('database') || lower.includes('postgres') || lower.includes('mysql')) integrations.push('Database');\n  \n  return integrations;\n}\n\nfunction assessComplexity(req) {\n  const lower = req.toLowerCase();\n  let score = 0;\n  \n  if (lower.includes('ai') || lower.includes('agent')) score += 3;\n  if (lower.includes('multiple') || lower.includes('several')) score += 2;\n  if (lower.includes('condition') || lower.includes('if')) score += 1;\n  if (lower.includes('loop') || lower.includes('iterate')) score += 2;\n  \n  if (score >= 5) return 'high';\n  if (score >= 3) return 'medium';\n  return 'low';\n}\n\nfunction generateRecommendations(req) {\n  const recommendations = [];\n  const lower = req.toLowerCase();\n  \n  if (lower.includes('api') && !lower.includes('error')) {\n    recommendations.push('Add error handling for API calls');\n  }\n  if (lower.includes('data') && !lower.includes('transform')) {\n    recommendations.push('Consider adding data transformation nodes');\n  }\n  if (lower.includes('multiple') && !lower.includes('loop')) {\n    recommendations.push('Use Split Out or Loop nodes for processing multiple items');\n  }\n  \n  return recommendations;\n}\n\nreturn { json: analysis };"
+      },
+      "id": "5ba7bd7a-dafd-4ef9-8af5-a3f48f4144d4",
+      "name": "Workflow Analysis Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        1568,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Recommends specific n8n nodes based on workflow requirements. Returns node types, names, and configuration guidance.",
+        "jsCode": "const analysis = $input.item.json;\n\n// Node selection based on workflow analysis\nconst selectedNodes = {\n  trigger: selectTriggerNode(analysis.components.trigger),\n  processing: selectProcessingNodes(analysis.components.actions),\n  transformation: selectTransformationNodes(analysis.components.transformations),\n  integration: selectIntegrationNodes(analysis.components.integrations),\n  utility: selectUtilityNodes(analysis)\n};\n\nfunction selectTriggerNode(triggerType) {\n  const triggers = {\n    'Schedule Trigger': { type: 'n8n-nodes-base.scheduleTrigger', name: 'Schedule Trigger' },\n    'Webhook': { type: 'n8n-nodes-base.webhook', name: 'Webhook' },\n    'Chat Trigger': { type: '@n8n/n8n-nodes-langchain.chatTrigger', name: 'Chat Trigger' },\n    'Email Trigger': { type: 'n8n-nodes-base.emailReadImap', name: 'Email Trigger (IMAP)' },\n    'Manual Trigger': { type: 'n8n-nodes-base.manualTrigger', name: 'Manual Trigger' }\n  };\n  return triggers[triggerType] || triggers['Webhook'];\n}\n\nfunction selectProcessingNodes(actions) {\n  const nodeMap = {\n    'Send Email': { type: 'n8n-nodes-base.gmail', name: 'Gmail' },\n    'Database Operation': { type: 'n8n-nodes-base.postgres', name: 'Postgres' },\n    'HTTP Request': { type: 'n8n-nodes-base.httpRequest', name: 'HTTP Request' },\n    'Google Sheets': { type: 'n8n-nodes-base.googleSheets', name: 'Google Sheets' },\n    'Slack Message': { type: 'n8n-nodes-base.slack', name: 'Slack' },\n    'AI Processing': { type: '@n8n/n8n-nodes-langchain.agent', name: 'AI Agent' },\n    'Data Processing': { type: 'n8n-nodes-base.code', name: 'Code' }\n  };\n  \n  return actions.map(action => nodeMap[action] || { type: 'n8n-nodes-base.code', name: 'Code' });\n}\n\nfunction selectTransformationNodes(transformations) {\n  const nodeMap = {\n    'Filtering': { type: 'n8n-nodes-base.filter', name: 'Filter' },\n    'Data Mapping': { type: 'n8n-nodes-base.set', name: 'Set' },\n    'Aggregation': { type: 'n8n-nodes-base.aggregate', name: 'Aggregate' },\n    'Data Splitting': { type: 'n8n-nodes-base.splitOut', name: 'Split Out' }\n  };\n  \n  return transformations.map(t => nodeMap[t]);\n}\n\nfunction selectIntegrationNodes(integrations) {\n  const nodeMap = {\n    'Google': { type: 'n8n-nodes-base.googleSheets', name: 'Google Sheets' },\n    'Slack': { type: 'n8n-nodes-base.slack', name: 'Slack' },\n    'GitHub': { type: 'n8n-nodes-base.github', name: 'GitHub' },\n    'OpenAI': { type: '@n8n/n8n-nodes-langchain.lmChatOpenAi', name: 'OpenAI Chat Model' },\n    'Database': { type: 'n8n-nodes-base.postgres', name: 'Postgres' }\n  };\n  \n  return integrations.map(i => nodeMap[i]).filter(Boolean);\n}\n\nfunction selectUtilityNodes(analysis) {\n  const utility = [\n    { type: 'n8n-nodes-base.set', name: 'Workflow Configuration', purpose: 'Centralized configuration' }\n  ];\n  \n  if (analysis.complexity !== 'low') {\n    utility.push({ type: 'n8n-nodes-base.if', name: 'IF', purpose: 'Conditional logic' });\n  }\n  \n  return utility;\n}\n\nreturn { json: selectedNodes };"
+      },
+      "id": "3ed15ddd-f656-4361-a094-47bdca1ff0bd",
+      "name": "Node Selection Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        1776,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Generates complete n8n workflow JSON based on selected nodes and configuration. Returns importable workflow JSON.",
+        "jsCode": "const analysis = $input.item.json.analysis || {};\nconst nodes = $input.item.json.nodes || {};\nconst userRequirement = $input.item.json.requirement || '';\n\n// Generate workflow JSON\nconst workflow = {\n  name: generateWorkflowName(userRequirement),\n  nodes: [],\n  connections: {},\n  active: false,\n  settings: {},\n  tags: []\n};\n\n// Add nodes\nlet nodeId = 1;\nconst nodeIds = {};\n\n// Add trigger\nif (nodes.trigger) {\n  const triggerId = `node${nodeId++}`;\n  nodeIds['trigger'] = triggerId;\n  workflow.nodes.push({\n    id: triggerId,\n    name: nodes.trigger.name,\n    type: nodes.trigger.type,\n    typeVersion: 1,\n    position: [250, 300],\n    parameters: {}\n  });\n}\n\n// Add Workflow Configuration\nconst configId = `node${nodeId++}`;\nnodeIds['config'] = configId;\nworkflow.nodes.push({\n  id: configId,\n  name: 'Workflow Configuration',\n  type: 'n8n-nodes-base.set',\n  typeVersion: 3.4,\n  position: [450, 300],\n  parameters: {\n    mode: 'manual',\n    includeOtherFields: true,\n    assignments: { assignments: [] }\n  }\n});\n\n// Add processing nodes\nif (nodes.processing && nodes.processing.length > 0) {\n  nodes.processing.forEach((node, index) => {\n    const id = `node${nodeId++}`;\n    nodeIds[`processing${index}`] = id;\n    workflow.nodes.push({\n      id: id,\n      name: node.name,\n      type: node.type,\n      typeVersion: 1,\n      position: [650 + (index * 200), 300],\n      parameters: {}\n    });\n  });\n}\n\n// Create connections\nif (nodeIds['trigger'] && nodeIds['config']) {\n  workflow.connections[workflow.nodes.find(n => n.id === nodeIds['trigger']).name] = {\n    main: [[{ node: 'Workflow Configuration', type: 'main', index: 0 }]]\n  };\n}\n\nif (nodeIds['config'] && nodeIds['processing0']) {\n  workflow.connections['Workflow Configuration'] = {\n    main: [[{ node: workflow.nodes.find(n => n.id === nodeIds['processing0']).name, type: 'main', index: 0 }]]\n  };\n}\n\n// Connect processing nodes\nfor (let i = 0; i < (nodes.processing?.length || 0) - 1; i++) {\n  const currentNode = workflow.nodes.find(n => n.id === nodeIds[`processing${i}`]);\n  const nextNode = workflow.nodes.find(n => n.id === nodeIds[`processing${i + 1}`]);\n  if (currentNode && nextNode) {\n    workflow.connections[currentNode.name] = {\n      main: [[{ node: nextNode.name, type: 'main', index: 0 }]]\n    };\n  }\n}\n\nfunction generateWorkflowName(requirement) {\n  const words = requirement.split(' ').slice(0, 5).join(' ');\n  return words.charAt(0).toUpperCase() + words.slice(1) + ' Workflow';\n}\n\nreturn { \n  json: { \n    workflow: workflow,\n    setupInstructions: generateSetupInstructions(workflow, analysis)\n  } \n};\n\nfunction generateSetupInstructions(workflow, analysis) {\n  const instructions = [];\n  instructions.push('1. Import this workflow JSON into your n8n instance');\n  instructions.push('2. Configure credentials for any integration nodes');\n  instructions.push('3. Update the Workflow Configuration node with your specific values');\n  if (analysis.complexity === 'high') {\n    instructions.push('4. Test the workflow with sample data before activating');\n  }\n  instructions.push('5. Activate the workflow when ready');\n  return instructions;\n}"
+      },
+      "id": "42825a89-ec64-4725-b61c-d10b38dd70f3",
+      "name": "Workflow Generation Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        1920,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Access n8n API to get available nodes, workflow templates, and documentation",
+        "url": "https://api.n8n.io/api/v1/nodes",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "47757e9e-3639-433d-be63-c36cd7f3185c",
+      "name": "n8n API Tool",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        2080,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        -432
+      ],
+      "id": "a591e633-ed27-4c6d-a09f-cf9396108f6e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6gDYNAoDK07pVT3M",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "n8n Workflow Builder Chat": {
+      "main": [
+        [
+          {
+            "node": "Workflow Builder AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Workflow Builder AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "n8n Workflow Builder Chat",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Analysis Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Workflow Builder AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node Selection Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Workflow Builder AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Generation Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Workflow Builder AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n API Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Workflow Builder AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Workflow Builder AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d172e5ac-d07d-42dc-adb4-8619f240cb05",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6f98da50e1bcb75865875df1e18ad4f36e8b35a2cfedc9612c01becef4ac9528"
+  },
+  "id": "oi1tby7N04quzBLf",
+  "tags": []
+}

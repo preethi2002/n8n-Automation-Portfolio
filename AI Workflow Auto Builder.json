@@ -1,0 +1,230 @@
+{
+  "name": "AI Workflow Auto Builder",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "workflow-auto-build",
+        "options": {}
+      },
+      "id": "e31a6296-25ad-47bd-9b38-4ca33e866c09",
+      "name": "Requirement Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        96
+      ],
+      "webhookDescription": "Receives workflow requirement from user",
+      "webhookId": "a23fbb1e-0e5d-4aa4-b4e1-c2594561fc3c"
+    },
+    {
+      "parameters": {
+        "sendTo": "preethirnt2002@gmail.com",
+        "subject": "Requiremnt Details :",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        192
+      ],
+      "id": "44ece6d6-a697-487d-8059-7644619f4308",
+      "name": "Send a message",
+      "webhookId": "816737d8-2074-46c3-aa14-fb306497c561",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "QzchmdlasWTzGOjQ",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "id": "718d97aa-2376-481e-b984-29036d7b7fd4",
+      "name": "Save Workflow JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "947ae4a4-82a1-462c-8ba0-d0ec1462ae96",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        320
+      ],
+      "id": "27fb913c-3c0c-4a26-abca-430fca985bf6",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6gDYNAoDK07pVT3M",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Convert the following workflow description into a valid n8n importable JSON workflow.\n\n{{ $json.output }}\n",
+        "options": {
+          "systemMessage": "=You are a highly advanced n8n workflow generation engine.\n\nYour job is to take a human-readable workflow description (with titles, node purposes, and logic) and convert it into a valid **n8n importable JSON workflow**.\n\nYou must produce the output strictly in a format that can be imported directly into n8n.\n\n### Output Format (MANDATORY)\n{\n  \"n8n_import_json\": {\n    // full n8n workflow JSON structure here\n  }\n}\n\n### Workflow JSON Rules\n1. Always include:\n   - `name`: Workflow name (use from description)\n   - `nodes`: Each node from the workflow (Trigger, AI Agent, HTTP Request, Set, Function, Gmail, etc.)\n   - `connections`: Logical connections between the nodes\n   - `type`, `parameters`, and `position` for each node\n2. Every node must have:\n   - A logical `name` (like “Trigger: New Enquiry”, “AI Agent: Classify Request”, “Send Email”)\n   - Correct node `type` (for example, `n8n-nodes-base.webhook`, `n8n-nodes-base.function`, `n8n-nodes-base.gmail`)\n   - Placeholder configuration for credentials or API keys\n3. Connections must reflect logical order (Trigger → AI Agent → Function → Set → Gmail, etc.)\n4. If description mentions multiple paths (like “flight” or “hotel”), create conditional branches using IF or Switch nodes.\n5. Always assume **dummy/test data** (no real API keys).\n6. The final JSON must be valid and importable directly in n8n — it should begin with `{ \"name\": ... }` structure, not explanations.\n\n### Style Rules\n- Do not include markdown or explanations.\n- Do not include text before or after JSON.\n- Output must be **pure JSON**.\n- Every field must be syntactically valid.\n- I need only n8n import json file structure response provide \n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -576,
+        96
+      ],
+      "id": "9a068da7-77fb-4b42-b895-63fc5d4fdb04",
+      "name": "Import_Workflow_Json"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        320
+      ],
+      "id": "e58f5dda-b6a5-4d4a-81fa-b5770d3af797",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6gDYNAoDK07pVT3M",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the user's workflow requirement:\n\n{{ $json.body.message }}\n\nAnalyze this requirement carefully and generate 2–3 complete automation workflows in n8n JSON format that implement it.\n\nReturn:\n- Short professional explanation (purpose, trigger, node usage)\n- Detailed list of nodes and their function\n- Alternative approaches (minimum two)\n\nEnsure it looks professional and can be directly emailed as a system-generated workflow report.\n",
+        "options": {
+          "systemMessage": "=You are an expert n8n Automation Architect and Workflow Generator.\n\nYour task:\n- Analyze any user-provided \"requirement\" text.\n- Generate **2–3 complete n8n workflow alternatives** based on the given requirement.\n- Each workflow must be fully importable (valid JSON).\n- Every node must have:\n  - Logical name and correct node type.\n  - Proper data connections.\n  - Placeholder credentials (e.g., API_KEY_HERE).\n  - Comments describing its purpose.\n\nFor each workflow:\n1. Explain in simple terms **what the workflow does**.\n2. List **all nodes** and their purpose (one line each).\n3. Explain **why these nodes were used**.\n4. Describe **how the trigger node works**.\n5. Mention **what real-world use case** it fits best (e.g., form submission, automation, API integration, etc.).\nYou are a highly specialized n8n automation architect and workflow designer.\n\nYour goal is to read a given REQUIREMENT or USE CASE and generate a complete, well-structured workflow description for n8n.\n\nYou MUST output the workflow in the following clear structured documentation style:\n\nOutput Format:\nWorkflow Title:\nA one-line summary describing the purpose of the workflow.\n\nWhat the workflow does:\nBriefly explain what the workflow is designed to accomplish.\n\nNodes used and their purpose:\nList each node (Trigger, Function, AI Agent, Gmail, HTTP Request, Webhook, Set, Code, etc.) and explain exactly what it does in the workflow.\n\nWhy these nodes were used:\nExplain why each node type was selected for this use case (e.g., Webhook for integration, Code for logic, Set for formatting, etc.).\n\nHow the trigger node works:\nDescribe how the trigger node is activated (for example, by a webhook call, email event, schedule, etc.) and what input data it expects.\n\nReal-world use case:\nDescribe where this workflow would be practically used in real business scenarios.\n\nRules:\n- Always respond in markdown with proper sections and formatting.\n- Always use professional tone and precise explanations.\n- Do NOT include JSON or code unless the user specifically asks for it.\n- The output must read like workflow documentation that can be easily converted into an importable workflow later.\n\n\nAll explanations must be clear, structured, and professional — suitable for automatic email summaries.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -928,
+        96
+      ],
+      "id": "2a02f062-d1a7-47c9-b251-fb10c332e872",
+      "name": "Requirement_Analyze"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Requirement Webhook": {
+      "main": [
+        [
+          {
+            "node": "Requirement_Analyze",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Workflow JSON": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Requirement_Analyze",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Import_Workflow_Json": {
+      "main": [
+        [
+          {
+            "node": "Save Workflow JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Import_Workflow_Json",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Requirement_Analyze": {
+      "main": [
+        [
+          {
+            "node": "Import_Workflow_Json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b3ff9705-6e1d-4ed3-ad86-13884eb34fb7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6f98da50e1bcb75865875df1e18ad4f36e8b35a2cfedc9612c01becef4ac9528"
+  },
+  "id": "hfUQyc6AYuUrnyqa",
+  "tags": []
+}

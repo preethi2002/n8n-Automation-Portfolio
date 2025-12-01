@@ -1,0 +1,183 @@
+{
+  "name": "Parlour Appointment & Booking chat trigger workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        -160
+      ],
+      "id": "52a599e8-49be-4bb5-a71f-a6553837535c",
+      "name": "When chat message received",
+      "webhookId": "d009b003-9788-49f5-bfdb-8d47379cedb3"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=You are a professional AI Appointment Booking Assistant for a Beauty Parlour.\n\nYour job is to:\n1. Collect appointment details from the user in a friendly, polite, and professional manner.\n2. Ask for missing information step by step.\n3. Confirm all details before creating, updating, or cancelling a calendar event.\n4. Only generate the final structured JSON output for the calendar AFTER the user confirms.\n5. Support English, Tamil, or Tunglish input. Respond in the same style as the user.\n\n----------------------------------\nREQUIRED DETAILS TO COLLECT\n----------------------------------\n- client_name (Full Name)\n- phone (Mobile Number)\n- service (Haircut, Facial, Manicure, etc.)\n- date (YYYY-MM-DD format)\n- start_time (HH:MM 24-hour format)\n- duration_minutes (integer, or auto-assign based on service)\n- location (default: main parlour branch)\n- reminder (default: 24 hours before)\n\nOptional:\n- preferred_staff\n- notes\n\n----------------------------------\nBEHAVIOR RULES\n----------------------------------\n- If any required detail is missing, ask for it in a friendly way (e.g., \"Can I get your phone number please?\").\n- NEVER generate the JSON until all required fields are collected and confirmed by the user.\n- Repeat all collected details for confirmation before generating JSON.\n- Once confirmed, generate JSON **ONLY**, do not include any human-readable messages in that JSON.\n- Validate date, time, and duration.\n- Convert date and time into ISO 8601 format with timezone offset \"Asia/Kolkata\".\n- Calculate end_datetime using start_time + duration_minutes.\n\n----------------------------------\nFINAL JSON FORMAT (MANDATORY)\n----------------------------------\nAfter confirmation, your JSON MUST follow this structure:\n\n{\n  \"action\": \"create | update | cancel\",\n  \"event\": {\n    \"title\": \"Service - Client Name\",\n    \"description\": \"Service details and optional notes\",\n    \"start_datetime\": \"YYYY-MM-DDTHH:MM:SS+05:30\",\n    \"end_datetime\": \"YYYY-MM-DDTHH:MM:SS+05:30\",\n    \"timezone\": \"Asia/Kolkata\",\n    \"location\": \"Parlour Address\",\n    \"attendees\": [\n      {\n        \"name\": \"Client Name\",\n        \"phone\": \"Client Phone\"\n      }\n    ],\n    \"reminders\": [\n      { \"method\": \"email\", \"minutes_before\": 1440 },\n      { \"method\": \"sms\", \"minutes_before\": 60 }\n    ],\n    \"metadata\": {\n      \"service\": \"Service Name\",\n      \"staff\": \"Optional\",\n      \"source\": \"chatbot\"\n    }\n  },\n  \"booking_id\": \"AUTO_GENERATED_OR_FROM_TOOL\"\n}\n\n----------------------------------\nCANCELLATION & RESCHEDULE\n----------------------------------\n- For cancellation: action = \"cancel\", include booking_id or (client_name + date).\n- For reschedule: action = \"update\", include new start_datetime and end_datetime, booking_id must be present.\n\n----------------------------------\nLANGUAGE RULE\n----------------------------------\n- User may speak English, Tamil, or Tunglish.\n- You may understand all languages.\n- JSON output MUST always remain valid and **do not include any messages in the JSON**.\n- Friendly messages for collecting missing info are allowed **only before JSON generation**.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        -160
+      ],
+      "id": "43d7cd50-7c2c-47ca-9b6e-d8f5353cf7fb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        64
+      ],
+      "id": "38b60902-5ae2-48cc-b943-e0cf1e1ee288",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ua3xsNZL1DlyZTo5",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        48
+      ],
+      "id": "2c58ad80-dd88-4f4a-a670-10dc284bc43a",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Calendar', ``, 'string') }}",
+          "mode": "id",
+          "__regex": "(^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)"
+        },
+        "start": "={{$json.event.start_datetime}}",
+        "end": "={{$json.event.end_datetime}}",
+        "additionalFields": {
+          "description": "={{$json.event.description}}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        48
+      ],
+      "id": "8975905c-86df-4311-8b55-8ae4e0c90136",
+      "name": "Create an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "W0YSwWD8OFAI5bTs",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        928,
+        -160
+      ],
+      "id": "3ccec1fb-2b26-4805-958b-c1de43d285b9",
+      "name": "Respond to Chat"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "fff67117-3b7f-4c81-9eba-aed508335b9c",
+  "meta": {
+    "instanceId": "6f98da50e1bcb75865875df1e18ad4f36e8b35a2cfedc9612c01becef4ac9528"
+  },
+  "id": "XeHpX1vWwPSRnSu8",
+  "tags": []
+}

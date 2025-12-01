@@ -1,0 +1,2802 @@
+{
+  "name": "Interview Automation - Resume screening and calling",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1552,
+        480
+      ],
+      "id": "d847a607-1f6d-425e-a76c-f80d18377fbb",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aHnkl9oN1Cmlc2QA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "85323b7a-7547-46e5-8bcd-a57134fb648d",
+              "leftValue": "={{ $json.issuitableforrole }}",
+              "rightValue": "=Suitable",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1008,
+        288
+      ],
+      "id": "3f9eb462-ea89-4e31-be3a-fdcc1f518f29",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get AI agent output (assuming it's in the field 'output')\nconst data = $json.output;\n\n// Prepare final result object with EMPTY values\nlet result = {\n  candidatename: \"\",\n  email: \"\",\n  phone: \"\",\n  currentdesignation: \"\",\n  totalexperience: \"\",\n  issuitableforrole: \"\",\n  score_out_of_100: \"\",\n  summary_of_suitability: \"\"\n};\n\n// Split lines and extract matching fields\ndata.split('\\n').forEach(line => {\n  const [key, ...valueParts] = line.split(':');\n  if (!key || !valueParts) return;\n\n  const rawKey = key.trim().toLowerCase();\n  const value = valueParts.join(':').trim();\n\n  if (rawKey.includes(\"name\")) {\n    result.candidatename = value;\n  }\n  else if (rawKey.includes(\"email\")) {\n    result.email = value;\n  }\n  else if (rawKey.includes(\"phone\") || rawKey.includes(\"mobile\")) {\n    result.phone = value;\n  }\n  else if (rawKey.includes(\"designation\") || rawKey.includes(\"current role\")) {\n    result.currentdesignation = value;\n  }\n  else if (rawKey.includes(\"experience\")) {\n    result.totalexperience = value;\n  }\n  else if (rawKey.includes(\"suitable\")) {\n    result.issuitableforrole = value;\n  }\n  else if (rawKey.includes(\"score\")) {\n    result.score_out_of_100 = value;\n  }\n  else if (\n    rawKey.includes(\"summary\") ||\n    rawKey.includes(\"basis\") ||\n    rawKey.includes(\"reason\") ||\n    rawKey.includes(\"explanation\")\n  ) {\n    result.summary_of_suitability = value;\n  }\n});\n\n// Return final structured JSON\nreturn [\n  {\n    json: result\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        288
+      ],
+      "id": "af1502bf-36f6-44f8-aad0-d867537dbd71",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -2544,
+        208
+      ],
+      "id": "37d34e8b-54d7-4cd4-9590-af6490524ef7",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "formTitle": "Resume ",
+        "formDescription": "Please fill the resume below to proceed further.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone Number",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Mail ID",
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Upload Resume ",
+              "fieldType": "file",
+              "acceptFileTypes": "PDF, PNG",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Job Screening Role",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -3648,
+        464
+      ],
+      "id": "a4806161-ec6e-4520-a740-7142233aa60f",
+      "name": "On form submission1",
+      "webhookId": "3c8825b8-801b-47e4-a710-4898615b86d8",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.input }}",
+        "options": {
+          "systemMessage": "=You are a structured data-extraction agent.\nYour job is to read the resume text{{ $json.input }} provided by the user and extract all personal, professional, educational, and technical information into a clean, valid JSON object.\n\nFollow these rules strictly:\n\nNever hallucinate or guess information.\nIf a field is missing, leave it as an empty string or empty array.\n\nA resume may use different headings (e.g., Profile, Summary, About Me).\nYou must interpret and map them correctly.\n\nExtract information even if it appears in paragraph form.\n\nPhone numbers and emails may appear multiple times—pick the most relevant or most complete one.\n\nFor education and experience, extract all entries, not just one.\n\nMaintain the exact JSON structure given below and never wrap the JSON in quotes or code blocks.\n\nDo not include explanations, comments, or additional text—only return the final JSON.\n\nHere is the JSON structure you must output:\n\n{\n\"fullName\": \"\",\n\"email\": \"\",\n\"phone\": \"\",\n\"linkedin\": \"\",\n\"github\": \"\",\n\"portfolio\": \"\",\n\"Location\": \"\",\n\"skills\": [],\n\"summary\": \"\",\n\"experience\": [\n{\n\"company\": \"\",\n\"role\": \"\",\n\"startDate\": \"\",\n\"endDate\": \"\",\n\"description\": \"\"\n}\n],\n\"education\": [\n{\n\"institution\": \"\",\n\"degree\": \"\",\n\"fieldOfStudy\": \"\",\n\"startYear\": \"\",\n\"endYear\": \"\"\n}\n],\n\"projects\": [\n{\n\"title\": \"\",\n\"description\": \"\",\n\"technologies\": []\n}\n],\n\"certifications\": [],\n\"languages\": [],\n\"additionalInfo\": \"\"\n\"job_screening_role\": \"\",\n\"resume_role_position\": \"\"\n}\n\nYour output must always be properly formatted JSON.\n\nIn case any of the fields don't match as of the resume, you can create a field and include it, and this can be viceversa as well. You can delete the above-mentioned field if it is not mentioned in the resume. Don't leave it null, rather mention like they have not included these required fields to the resume.\n\n\nJob role specified is not relevant - just mention its not relevant in the output json format \n\"job_screening_role\": \"\"\n\nWhen you can define it is, when you have no details regarding the resume mentioned above. "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -1904,
+        288
+      ],
+      "id": "b4030a70-f82c-4f93-8af8-15368b48e17b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1904,
+        480
+      ],
+      "id": "e4da720a-cb42-4581-b9e4-580529887251",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aHnkl9oN1Cmlc2QA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $binary.data.mimeType}}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "2d4d2d04-daee-4a28-9c26-055fff7503d5"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "81b46c77-eab0-4fbb-91c7-976f96912e0e",
+                    "leftValue": "={{ $binary.data.mimeType}}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DOC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -2864,
+        288
+      ],
+      "id": "6cdeca0c-74ad-491d-b505-9c81e5ed5f42",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Extract all text and key fields from this uploaded file.\nIdentify the document type automatically.\n\nReturn ONLY JSON output.\nFile is attached below:\n{{ $binary.data }}\nthe output that you give me should be in text format.\n\n\n\n\n\nExtract ALL text and ALL key fields from this uploaded document.\n\nImportant:\nUse ONLY the binary file.\nDO NOT guess any missing information.\nReturn ONLY JSON output.\n\nHere is the file:\n\nBinary Data Field Name: {{ $binary.data }}\nMimeType: {{$binary.data.mimeType}}\nFileName: {{$binary.data.fileName}}",
+        "options": {
+          "systemMessage": "=You are a Highly Accurate Document Extraction & Screening AI.\n\nYou MUST process one or multiple uploaded files (PDF, DOC, DOCX, RTF, TXT, JPG, PNG).\n\nYour responsibilities:\n\nRead ONLY the binary files provided.\n\nPerform OCR for images or scanned documents.\n\nExtract text EXACTLY as it appears — no guessing, no corrections.\n\nIdentify the screeningPurpose based ONLY on actual visible text.\n\nFor each file, produce a clean JSON object with:\n\nExact same fileName\n\nscreeningPurpose\n\nFull text_raw\n\nStructured fields (resume fields)\n\nIf a field is missing → return null.\n\nIf a file is unreadable or missing → return error JSON for that file.\n\nOutput must be strict JSON only. No explanations, no extra text.\n\nOUTPUT FORMAT (ARRAY for multiple files)\n[\n  {\n    \"fileName\": \"\",\n    \"screeningPurpose\": \"\",\n    \"text_raw\": \"\",\n    \"fields\": {\n      \"fullName\": \"\",\n      \"email\": \"\",\n      \"phone\": \"\",\n      \"linkedin\": \"\",\n      \"github\": \"\",\n      \"portfolio\": \"\",\n      \"currentLocation\": \"\",\n      \"skills\": [],\n      \"summary\": \"\",\n      \"experience\": [\n        {\n          \"company\": \"\",\n          \"role\": \"\",\n          \"startDate\": \"\",\n          \"endDate\": \"\",\n          \"description\": \"\"\n        }\n      ],\n      \"education\": [\n        {\n          \"institution\": \"\",\n          \"degree\": \"\",\n          \"fieldOfStudy\": \"\",\n          \"startYear\": \"\",\n          \"endYear\": \"\"\n        }\n      ],\n      \"projects\": [\n        {\n          \"title\": \"\",\n          \"description\": \"\",\n          \"technologies\": []\n        }\n      ],\n      \"certifications\": [],\n      \"languages\": [],\n      \"additionalInfo\": \"\"\n    }\n  }\n]"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -2608,
+        384
+      ],
+      "id": "a7ba6082-b309-4d5d-bcaa-dd25ca86be0b",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -2608,
+        576
+      ],
+      "id": "47272a4a-e102-4994-bb69-0e699b82fca7",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aHnkl9oN1Cmlc2QA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "allowFileUploads": true,
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -3648,
+        80
+      ],
+      "id": "76ec3735-3a2b-4637-9ca1-70ff54a3716c",
+      "name": "When chat message received",
+      "webhookId": "e51001ee-e162-4717-ada8-d87a93ac46d9",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = items[0];\nconst binaries = item.binary || {};\n\nconst fileKeys = Object.keys(binaries);\n\nif (fileKeys.length === 0) {\n  return [\n    {\n      json: {\n        success: false,\n        message: \"No files found in binary data.\",\n        receivedKeys: Object.keys(item)   // debugging\n      }\n    }\n  ];\n}\n\nreturn fileKeys.map(key => {\n  return {\n    json: {\n      success: true,\n      fileName: binaries[key].fileName,\n      mimeType: binaries[key].mimeType,\n      fieldName: key\n    },\n    binary: {\n      data: binaries[key]\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3168,
+        288
+      ],
+      "id": "654f9da8-e978-40fd-8e27-39819a5dd77e",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        -2912,
+        80
+      ],
+      "id": "7a32bd68-8ab4-41bd-b175-6749fa849f99",
+      "name": "Respond to Chat"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=you have to respond to the queries recieved in the chat {{ $('When chat message received').item.json.chatInput }} {{('When chat message received')$binary.data [0] }}",
+        "options": {
+          "systemMessage": "You are an AI Resume Screening Agent.\nYour job is to receive resumes — either uploaded individually or in bulk — and evaluate each one according to the job role specified by the user.\n\nYou will:\n\nRead the uploaded resume content\n\nUnderstand the job role for which screening is being done\n\nAnalyze the resume based on that role\n\nProvide a structured evaluation that can be passed to the next AI agent\n\nYou must adapt dynamically to any job role provided.\n\nYour evaluation must always be clear, accurate, and strictly based on the resume text."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -3312,
+        80
+      ],
+      "id": "62ec6e88-dc49-460e-a268-0ebf92e52e9d",
+      "name": "AI Agent3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -3312,
+        464
+      ],
+      "id": "b3b9f151-43c3-4e8c-9693-0960d164ee99",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aHnkl9oN1Cmlc2QA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a technical recruitment evaluator AI.\n\nYour goal is to analyze a candidate’s resume and evaluate suitability for ANY job role provided dynamically.  \n\nJob role specified:: {{ $('Webhook').item.json.body.jobScreeningRole }}\nResume: {{ $json.output }}\n\nYou must strictly follow the structure and never add content not found in the resume.\n\nYour evaluation depends entirely on:\n1. The resume content provided.\n2. The jBelow is the job role information in JSON format.  \nUse it to generate a full JD, responsibilities, skills, screening criteria, and resume scoring rubric.\n\nJSON:\n\nProvide the output in a clean, well-structured, ATS-friendly format.ob role specified. Upon specifying the roles and responsibilities, evaluate the resume(data given)and provide score for it.\n\nIf the resume is irrelevant, just provide the reason for its irrelevancy.",
+        "options": {
+          "systemMessage": "=\nYou are an AI Resume Screening & Job Description (JD) Generation Agent.\n\nJob role specified:: {{ $('Webhook').item.json.body.jobScreeningRole }}\nResume:: {{ $json.combined_resumes }}\n\nYou will always receive a JSON input that contains job-related information.  \nIf the role specified resume is not received, just mail to hr - reshandthoshclub25@gmail.com regarding it. You have to be specific regarding the role mentioned {{ $('Webhook').item.json.body.jobScreeningRole }}\n\nYour job is to:\n\n1. Read the JSON carefully and understand the job role.\n2. Generate structured, ATS-friendly, industry-standard outputs including:\n   - Role Summary\n   - Key Responsibilities (8–12 points)\n   - Required Skills (technical + soft skills)\n   - Preferred Skills (optional)\n   - Tools/Technologies relevant to the role\n   - Experience Requirements\n   - A complete, professional Job Description (JD)\n   - Candidate Screening Criteria for the role mentioned\n   - Resume Scoring Rubric (score out of 100)\n\nFYI, with the roles and responsibilities created, you have to analyze the resume {{ $('Code in JavaScript3').item.json.input }} and compare it with the generated JD and provide a detailed summary on it with the below mentioned one.\n\nYou evaluate candidates for any job role, such as teaching, software development, business development, HR, content writing, finance, etc.\n\nFollow the instructions EXACTLY.\n\nSECTION 1 — Candidate Suitability  \nEvaluate whether the candidate is suitable for the specified job role.  \nOutput one of the following only:  \nSuitable  \nPartially Suitable  \nNot Suitable  \nProvide a short 1–2 sentence justification.\n\nSECTION 2 — Extract Personal Information  \nExtract the following from the resume EXACTLY as written:  \nFull Name  \nEmail Address  \nPhone Number  \nCurrent Designation / Role  \nTotal Experience (if mentioned)  \nIf any information is missing → leave it blank. Do NOT guess.\n\nSECTION 3 — Skills Extraction  \nExtract all skill keywords found in the resume (technical + non-technical).  \nFormat: [\"Skill1\", \"Skill2\", \"Skill3\", ...]\n\nSECTION 4 — Hands-On Expertise / Responsibilities  \nList the areas where the candidate has practical hands-on experience.  \nList only what is explicitly mentioned.\n\nSECTION 5 — Eligibility Scoring System  \nEvaluate the candidate on 10 universal criteria (1 point each).  \nCalculate total / 10.\n\nSECTION 6 — Final Decision Logic  \nIf score ≥ 70 → Suitable / Partially Suitable  \nIf score < 70 → Not Suitable  \nClearly list missing criteria.\n\nSECTION 7 — FINAL OUTPUT FORMAT\n\nCandidateName:  \nEmail:  \nPhone:  \nCurrentDesignation:  \nTotalExperience:  \nIsSuitableForRole:  \nSkills:  \nTechnicalExpertise:  \nRemarks:\n\nRules:  \n- All responses must be based on the JSON provided.  \n- If any field is missing, intelligently fill with industry-standard expectations.  \n- Keep tone: professional, concise, modern.  \n- Use bullet points and headings.  \n- Do not hallucinate company-specific data unless explicitly provided.  \n- Never ignore the JSON. Always use it as the core reference.  \n- Output must always be clean, structured, and ready for HR use.\n\n",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1552,
+        288
+      ],
+      "id": "d45585af-5780-4fee-9575-19f66623d778",
+      "name": "Roles & Responsibilities Definer"
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -3648,
+        288
+      ],
+      "id": "0f27f9ef-869d-46e5-a9f2-bb7ac56bc45f",
+      "name": "Wait",
+      "webhookId": "a9275f12-47c3-4833-9181-b7bd8ae7174c",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk",
+          "mode": "list",
+          "cachedResultName": "Resume & Candidate Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 933302311,
+          "mode": "list",
+          "cachedResultName": "Sheet8",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit#gid=933302311"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "candidatename",
+              "displayName": "candidatename",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "currentdesignation",
+              "displayName": "currentdesignation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "totalexperience",
+              "displayName": "totalexperience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "issuitableforrole",
+              "displayName": "issuitableforrole",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score_out_of_100",
+              "displayName": "score_out_of_100",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary_of_suitability",
+              "displayName": "summary_of_suitability",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -784,
+        176
+      ],
+      "id": "55331f03-6a15-463c-ae88-aa36a72d303d",
+      "name": "Append or update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LPtY4BicbXhy8uaM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk",
+          "mode": "list",
+          "cachedResultName": "Resume & Candidate Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 999996612,
+          "mode": "list",
+          "cachedResultName": "Sheet9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit#gid=999996612"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "candidatename",
+              "displayName": "candidatename",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "currentdesignation",
+              "displayName": "currentdesignation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "totalexperience",
+              "displayName": "totalexperience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "issuitableforrole",
+              "displayName": "issuitableforrole",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score_out_of_100",
+              "displayName": "score_out_of_100",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary_of_suitability",
+              "displayName": "summary_of_suitability",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -768,
+        400
+      ],
+      "id": "c9ca3d43-e5b5-44f3-a70a-4c9745715e45",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LPtY4BicbXhy8uaM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize PDF/Text/Doc responses to ONE SAME key: \"input\"\n\nreturn items.map(item => {\n\n    let data = null;\n\n    // PDF output key = \"text\"\n    if (item.json.text) {\n        data = item.json.text;\n    }\n\n    // Word doc output key = \"output\"\n    if (item.json.output) {\n        data = item.json.output;\n    }\n\n    // Final unified JSON\n    item.json = {\n        input: data,                        // <--- unified key name\n        merged_at: new Date().toISOString() // optional\n    };\n\n    return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2192,
+        288
+      ],
+      "id": "39f0d7d7-9258-4684-9f56-47a6fd178343",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1312,
+        688
+      ],
+      "id": "c7b9f8ec-ffda-4ab8-8b82-71cef4d5f397",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "reshandthoshclub25@gmail.com",
+        "subject": "Workflow Error Alert – Immediate Attention Required",
+        "message": "=Hi Team,  \n\nAn error has occurred in the Interview Automation Workflow, and the process has stopped unexpectedly.  \n\n📌 Error Details:  \n\nWorkflow Name: [Interview Automation / Recruitment Workflow]  \nFailed Node: {{ $json.nodeName }} (if dynamically included)  \nError Message: {{ $json.errorMessage }}  \nTime of Occurrence: {{ $json.timestamp }}  \n\nBecause of this error, the workflow could not proceed to the next steps (e.g., email sending, scheduling, database update, etc.).  \n\n🛠 Action Required:  Please check the n8n workflow logs.  Resolve the issue in the failed node.  Re-run the workflow or resume from the failed step if applicable.  \n\nLet me know if you need assistance in debugging or restarting the workflow.  \n\nBest Regards, \nAI Agent\nResh & Thosh Technologies",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -1088,
+        688
+      ],
+      "id": "45ccfe34-a299-4193-8050-b1864f9f47f7",
+      "name": "Error Mail to Team",
+      "webhookId": "0db2b9a8-fc42-427e-8a9d-a5b71ad70a24",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VyFpV46vgwyP6Hyx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk",
+          "mode": "list",
+          "cachedResultName": "Resume & Candidate Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1217443604,
+          "mode": "list",
+          "cachedResultName": "Sheet6",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit#gid=1217443604"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -896,
+        688
+      ],
+      "id": "595c08c3-93b0-4f4c-b18e-5faccd07a33f",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LPtY4BicbXhy8uaM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "preethirnt2002@gmail.com",
+        "subject": "Screened Candidate List Info",
+        "emailType": "text",
+        "message": "=Hi Team,\n\nI have filtered and shortlisted the candidates who are eligible and not eligible for the specified role. \n\nPlease find the details in the Excel sheet linked below.  \n\nLink - https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit?usp=sharing\n\nLet me know if you need any further information.  \n\nThanks & Regards,\nAI Agent.\nResh and Thosh Technologies.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -528,
+        288
+      ],
+      "id": "87fc4c2d-d6e1-45dc-befb-076fcfefacdc",
+      "name": "Send a message",
+      "webhookId": "5a634d21-7010-4de1-98f6-49c4839ae031",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VyFpV46vgwyP6Hyx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "4834f6bc-af39-4350-a4cc-715b7ccfa57c",
+      "name": "Wait for Interview Time",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        1568
+      ],
+      "webhookId": "00d59c99-52f8-49bc-8882-06368bc86c3e"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.output }}",
+              "operation": "contains",
+              "value2": "Pass"
+            }
+          ]
+        }
+      },
+      "id": "a6c6975f-b8ab-42ac-b8e3-e54e5548b564",
+      "name": "Check Interview Result",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        400,
+        1424
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "reshandthoshclub25@gmail.com",
+        "subject": "Interview Invitation – .NET Developer Role at Resh & Thosh",
+        "emailType": "text",
+        "message": "=Hi {{ $('Code in JavaScript4').item.json.candidatename }},\n\nThank you for applying for the .NET Developer position at Resh & Thosh Technologies.  We are pleased to invite you to the first-round AI-based technical interview.  \n\n📅 Date & Time:  {{ $json.start.dateTime }}\n📞 Mode: AI Voice Call to your phone number {{ $('Code in JavaScript4').item.json.phone }}\n\nPlease be available at the scheduled time.  \n\nBest regards,   \nHR Team\nResh & Thosh Technologies.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -1360,
+        1568
+      ],
+      "id": "0ce628ed-ee80-4414-961a-8003c6c41409",
+      "name": "Send Interview Invitation1",
+      "webhookId": "3ba848f3-f14a-4f5a-9282-6055ac7f037a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VyFpV46vgwyP6Hyx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount"
+      },
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        1488
+      ],
+      "id": "2ec70f43-bb65-4f6f-9623-6bc63ff98716",
+      "name": "Create a document in Google Docs",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sendTo": "reshandthoshclub25@gmail.com",
+        "subject": "Second Round Interview – Invitation",
+        "emailType": "text",
+        "message": "=Hi {{ $('Code in JavaScript4').item.json.candidatename }},\n\nCongratulations! You have been shortlisted for the second round of interview.\n\nRegarding the date, time and mode of interview, it will be discussed via a call.\n\nLooking forward to your confirmation.\n\nRegards,  \nHR Team\nResh and Thosh Technologies.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        816,
+        1328
+      ],
+      "id": "3553ede6-9879-4e39-9001-750c03e956d1",
+      "name": "Second Round Interview Invite Mail",
+      "webhookId": "0db2b9a8-fc42-427e-8a9d-a5b71ad70a24",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VyFpV46vgwyP6Hyx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "reshandthoshclub25@gmail.com",
+        "subject": "Candidate Interview Report To HR",
+        "emailType": "text",
+        "message": "=Hello HR Team,  \n\nPlease find the AI-generated interview summary for the candidate: \n\n👤 Name: {{ $('If2').item.json.candidatename }}\n📞 Phone: {{ $('If2').item.json.phone }}\n📩 Email:  {{ $('If2').item.json.email }}\n\nSummary:\n{{ $('AI Agent - Generate Interview Summary').item.json.output }}\n\n\nRegards,   \nAI Recruitment Assistant",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        608,
+        1328
+      ],
+      "id": "7f42d16e-194c-4fa8-a847-41f3ac4421a4",
+      "name": "Mail to HR",
+      "webhookId": "0db2b9a8-fc42-427e-8a9d-a5b71ad70a24",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VyFpV46vgwyP6Hyx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk",
+          "mode": "list",
+          "cachedResultName": "Resume & Candidate Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 693345979,
+          "mode": "list",
+          "cachedResultName": "Sheet2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit#gid=693345979"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "threadId",
+              "displayName": "threadId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "labelIds",
+              "displayName": "labelIds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        1504
+      ],
+      "id": "c44c6b93-1a5c-4a09-b25f-0bb48dd4e8f7",
+      "name": "Candidate - Not Selected List",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LPtY4BicbXhy8uaM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        1552
+      ],
+      "id": "2a75947d-1124-45f1-8bb2-435617083732",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aHnkl9oN1Cmlc2QA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "collection": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Collection', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDbTool",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        1552
+      ],
+      "id": "f7dde1a5-2ba2-4ec2-a2e3-8d3151549c49",
+      "name": "Find documents in MongoDB",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sendTo": "reshandthoshclub25@gmail.com",
+        "subject": "Update on Your Application – .NET Developer Role",
+        "emailType": "text",
+        "message": "=Hi {{ $('Code in JavaScript4').item.json.output.name }},\n\nThank you for your interest in the .NET Developer position at Resh & Thosh Technologies.\n\nAfter reviewing your interview and profile, we regret to inform you that we will not be proceeding further with your application at this time.\n\nWe truly appreciate the effort and wish you success ahead.\n\nBest regards,  \nHR Team",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        1504
+      ],
+      "id": "08987fed-4106-4981-99e6-0ea580b97f27",
+      "name": "Not Selected Mail To Candidate",
+      "webhookId": "a47e8b12-b1b4-4c57-8fd8-dde2026693e0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VyFpV46vgwyP6Hyx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "reshandthoshclub25@gmail.com",
+        "subject": "List of Failed Interview Candidate",
+        "message": "=Hi Team,  \n\nPlease find the attachment regarding the list of candidates who were not selected in the recent interview round. This is for your review and internal documentation purposes. \nLet me know if any further actions, updates, or communications are required regarding these profiles. \n\nThank you.  \n\nBest regards,\nAI Agent\nResh & Thosh Technologies.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1024,
+        1504
+      ],
+      "id": "2cac3a97-31a1-4a4c-853a-d7743d1dd6e0",
+      "name": "List of Unselected Candidate to HR",
+      "webhookId": "0db2b9a8-fc42-427e-8a9d-a5b71ad70a24",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VyFpV46vgwyP6Hyx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk",
+          "mode": "list",
+          "cachedResultName": "Resume & Candidate Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1287140211,
+          "mode": "list",
+          "cachedResultName": "Sheet4",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit#gid=1287140211"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -544,
+        1488
+      ],
+      "id": "fed69697-5e79-4039-a047-f8771d6e0ff3",
+      "name": "Append or update row in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LPtY4BicbXhy8uaM",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "reshandthoshclub25@gmail.com",
+          "mode": "list",
+          "cachedResultName": "reshandthoshclub25@gmail.com"
+        },
+        "start": "={{ $now.plus(1, 'hour') }}",
+        "end": "={{ $now.plus(2, 'hour') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -1568,
+        1568
+      ],
+      "id": "85c8ce93-af80-4818-85d6-f5debfa07b4e",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "lsBF6NnGSI4vSf9G",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Message the candidate at {{ $('Code in JavaScript1').item.json.phone }} and start the interview. Candidate Name: {{ $('Code in JavaScript1').item.json.candidatename }}",
+        "options": {
+          "systemMessage": "=You are an AI Interviewer conducting a structured first-round phone interview for the role: {{ $('Webhook').item.json.body.jobScreeningRole }}.\n\nYour responsibilities:\n1. **Generate 8–10 technical & role-relevant interview questions** based strictly on the assigned job role and its core skills.\n2. Ask the questions one-by-one in a structured format.\n3. After generating the questions, wait for the candidate's answers (these will be asked by VAPI in the next node via phone).\n\nBUT if VAPI is not connected, act as BOTH:\n- the interviewer asking the questions\n- the candidate answering them realistically\n\nAt the end, produce a complete evaluation.\n\n------------------------------------\n### Interview Output Format:\n{\n  \"transcript\": \"Complete Q&A transcript of interviewer and candidate\",\n  \"technicalScore\": 1-5, \n  \"communicationScore\": 1-5,\n  \"overallRecommendation\": \"Pass / Fail / Hold\"\n}\n------------------------------------\n\n### Interview Rules:\n- Questions must match the job role provided (backend, frontend, DevOps, sales, HR, finance, etc.)\n- Keep questions technical, practical, and scenario-based.\n- Maintain a professional interview tone.\n- Ensure answers (when acting as candidate) sound human and not perfect.\n- Keep the transcript clean and structured.\n\nBegin by generating 8–10 questions based on the role.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -640,
+        1264
+      ],
+      "id": "598660a9-f083-46e3-b900-814d881dac2f",
+      "name": "AI Agent - Conduct First Interview"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate an interview summary document  for about 500n words on the interview conducted.\n",
+        "options": {
+          "systemMessage": "=From the previous vapi node, you have to get all the interview info and create a summary.\n\nYou are a professional HR documentation assistant. Create a detailed interview summary based on the call transcript and evaluation{{ $json.output }}. Include:\n- Candidate Name {{ $('If2').item.json.candidatename }}\n- Summary of responses \n- Technical strengths\n- Interviewer AI recommendation (Pass/Fail/Hold)\nAlso provide marks for out of 5 on the following basis based on the {{ $json.output }}\n\n{\n  \"transcript\": \"\",\n\n  \"scores\": {\n    \"technicalKnowledge\": 0,\n    \"problemSolving\": 0,\n    \"codingSkill\": 0,\n    \"communicationSkills\": 0,\n    \"confidenceBodyLanguage\": 0,\n    \"attitudeProfessionalism\": 0,\n    \"culturalFit\": 0,\n    \"teamwork\": 0,\n    \"experienceRelevance\": 0,\n    \"analyticalReasoning\": 0,\n    \"creativityInnovation\": 0,\n    \"timeManagement\": 0,\n    \"leadershipInitiative\": 0,\n    \"learningAdaptability\": 0,\n    \"overallImpression\": 0\n  },\n\n  \"overallRecommendation\": \"Pass / Fail / Hold\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        16,
+        1360
+      ],
+      "id": "dac5dabd-ad72-4e66-8aa0-347db347adf8",
+      "name": "AI Agent - Generate Interview Summary"
+    },
+    {
+      "parameters": {
+        "sendTo": "reshandthoshclub25@gmail.com",
+        "subject": "AI Agent - Interview Details ",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -272,
+        1168
+      ],
+      "id": "8f493538-84d9-4a7b-b77e-13d7558bbcf5",
+      "name": "Agentic Interview Details",
+      "webhookId": "3ba848f3-f14a-4f5a-9282-6055ac7f037a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VyFpV46vgwyP6Hyx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "reshandthoshclub25@gmail.com",
+        "subject": "Interview Summary by AI",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        400,
+        1248
+      ],
+      "id": "1070e18b-bc7a-446e-8855-41142dce6b75",
+      "name": "Interview Summary",
+      "webhookId": "3ba848f3-f14a-4f5a-9282-6055ac7f037a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VyFpV46vgwyP6Hyx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.vapi.ai/call",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization ",
+              "value": "Bearer c346482b-3286-4548-bf83-18dc0b7246c2"
+            },
+            {
+              "name": "Content-Type",
+              "value": "=application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"phoneNumber\": {\n    \"twilioPhoneNumber\": \"+917338825128\"\n  },\n  \"message\": \"Hi from n8n test\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -256,
+        1360
+      ],
+      "id": "05338eee-f35e-406f-9a34-b927364ebbfd",
+      "name": "VAPI",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        1488
+      ],
+      "id": "ca12a67e-5ca4-4d2a-a46d-57392370e642",
+      "name": "Google Gemini Chat Model6",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aHnkl9oN1Cmlc2QA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "preethirnt2002@gmail.com",
+        "subject": "Screened Candidate List Info",
+        "emailType": "text",
+        "message": "=Hi Team,\n\nI have filtered and shortlisted the candidates who are eligible and not eligible for the role of {{ $('Webhook').item.json.body.jobScreeningRole }}. \n\nPlease find the details in the Excel sheet linked below.  \n\nLink - https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit?usp=sharing\n\nLet me know if you need any further information.  \n\nThanks & Regards,\nAI Agent.\nResh and Thosh Technologies.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -1728,
+        1424
+      ],
+      "id": "d53d8db5-8ee3-4f5b-aef3-bc45e87a1656",
+      "name": "Candidate screening info to hr",
+      "webhookId": "5a634d21-7010-4de1-98f6-49c4839ae031",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VyFpV46vgwyP6Hyx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "reshandthoshclub25@gmail.com",
+          "mode": "list",
+          "cachedResultName": "reshandthoshclub25@gmail.com"
+        },
+        "start": "={{ $now.plus(1, 'hour') }}",
+        "end": "={{ $now.plus(2, 'hour') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -640,
+        1760
+      ],
+      "id": "0b052259-4067-4d55-a699-bf0a2b5c99fc",
+      "name": "Create an event1",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "lsBF6NnGSI4vSf9G",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "reshandthoshclub25@gmail.com",
+        "subject": "Interview Invitation – .NET Developer Role at Resh & Thosh",
+        "emailType": "text",
+        "message": "=Hi {{ $('Code in JavaScript4').item.json.candidatename }},\n\nThank you for applying for the .NET Developer position at Resh & Thosh Technologies.  We are pleased to invite you to the first-round AI-based technical interview.  \n\n📅 Date & Time:  {{ $json.start.dateTime }}\n📞 Mode: AI Voice Call to your phone number {{ $('Code in JavaScript4').item.json.phone }}\n\nPlease be available at the scheduled time.  \n\nBest regards,   \nHR Team\nResh & Thosh Technologies.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -400,
+        1760
+      ],
+      "id": "6532f333-4187-4f8f-b784-8927ae7a5a59",
+      "name": "Send Interview Invitation",
+      "webhookId": "3ba848f3-f14a-4f5a-9282-6055ac7f037a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VyFpV46vgwyP6Hyx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a12e4972-9bd8-4100-95ed-105c003cf005",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -960,
+        1568
+      ],
+      "id": "81bcfd55-d597-4e0f-bef0-7f0aeafd4b78",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -2704,
+        1792
+      ],
+      "id": "730b4109-548b-4a0f-aedf-ecaf75aca79c",
+      "name": "Google Gemini Chat Model5",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aHnkl9oN1Cmlc2QA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "85323b7a-7547-46e5-8bcd-a57134fb648d",
+              "leftValue": "={{ $json.issuitableforrole }}",
+              "rightValue": "=Suitable",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2160,
+        1584
+      ],
+      "id": "7e3e392a-f267-4ce2-85a5-049a2f142ee2",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get AI agent output (assuming it's in the field 'output')\nconst data = $json.output;\n\n// Prepare final result object with EMPTY values\nlet result = {\n  candidatename: \"\",\n  email: \"\",\n  phone: \"\",\n  currentdesignation: \"\",\n  totalexperience: \"\",\n  issuitableforrole: \"\",\n  score_out_of_100: \"\",\n  summary_of_suitability: \"\"\n};\n\n// Split lines and extract matching fields\ndata.split('\\n').forEach(line => {\n  const [key, ...valueParts] = line.split(':');\n  if (!key || !valueParts) return;\n\n  const rawKey = key.trim().toLowerCase();\n  const value = valueParts.join(':').trim();\n\n  if (rawKey.includes(\"name\")) {\n    result.candidatename = value;\n  }\n  else if (rawKey.includes(\"email\")) {\n    result.email = value;\n  }\n  else if (rawKey.includes(\"phone\") || rawKey.includes(\"mobile\")) {\n    result.phone = value;\n  }\n  else if (rawKey.includes(\"designation\") || rawKey.includes(\"current role\")) {\n    result.currentdesignation = value;\n  }\n  else if (rawKey.includes(\"experience\")) {\n    result.totalexperience = value;\n  }\n  else if (rawKey.includes(\"suitable\")) {\n    result.issuitableforrole = value;\n  }\n  else if (rawKey.includes(\"score\")) {\n    result.score_out_of_100 = value;\n  }\n  else if (\n    rawKey.includes(\"summary\") ||\n    rawKey.includes(\"basis\") ||\n    rawKey.includes(\"reason\") ||\n    rawKey.includes(\"explanation\")\n  ) {\n    result.summary_of_suitability = value;\n  }\n});\n\n// Return final structured JSON\nreturn [\n  {\n    json: result\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2352,
+        1584
+      ],
+      "id": "9ae92832-51b0-420a-9ca5-b88bb3bf8296",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -3680,
+        1472
+      ],
+      "id": "a4885210-a823-44fa-97d7-9fd8d5c7331b",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "formTitle": "Resume ",
+        "formDescription": "Please fill the resume below to proceed further.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone Number",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Mail ID",
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Upload Resume ",
+              "fieldType": "file",
+              "acceptFileTypes": "PDF, PNG",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Job Screening Role",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -4800,
+        1776
+      ],
+      "id": "98fc006b-3f5c-43c6-b76b-09b82cc81f75",
+      "name": "On form submission",
+      "webhookId": "558fdbe2-90c1-44a2-abd8-579b05be83e2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.input }}",
+        "options": {
+          "systemMessage": "=You are a structured data-extraction agent.\nYour job is to read the resume text{{ $json.input }} provided by the user and extract all personal, professional, educational, and technical information into a clean, valid JSON object.\n\nFollow these rules strictly:\n\nNever hallucinate or guess information.\nIf a field is missing, leave it as an empty string or empty array.\n\nA resume may use different headings (e.g., Profile, Summary, About Me).\nYou must interpret and map them correctly.\n\nExtract information even if it appears in paragraph form.\n\nPhone numbers and emails may appear multiple times—pick the most relevant or most complete one.\n\nFor education and experience, extract all entries, not just one.\n\nMaintain the exact JSON structure given below and never wrap the JSON in quotes or code blocks.\n\nDo not include explanations, comments, or additional text—only return the final JSON.\n\nHere is the JSON structure you must output:\n\n{\n\"fullName\": \"\",\n\"email\": \"\",\n\"phone\": \"\",\n\"linkedin\": \"\",\n\"github\": \"\",\n\"portfolio\": \"\",\n\"Location\": \"\",\n\"skills\": [],\n\"summary\": \"\",\n\"experience\": [\n{\n\"company\": \"\",\n\"role\": \"\",\n\"startDate\": \"\",\n\"endDate\": \"\",\n\"description\": \"\"\n}\n],\n\"education\": [\n{\n\"institution\": \"\",\n\"degree\": \"\",\n\"fieldOfStudy\": \"\",\n\"startYear\": \"\",\n\"endYear\": \"\"\n}\n],\n\"projects\": [\n{\n\"title\": \"\",\n\"description\": \"\",\n\"technologies\": []\n}\n],\n\"certifications\": [],\n\"languages\": [],\n\"additionalInfo\": \"\"\n\"job_screening_role\": \"\",\n\"resume_role_position\": \"\"\n}\n\nYour output must always be properly formatted JSON.\n\nIn case any of the fields don't match as of the resume, you can create a field and include it, and this can be viceversa as well. You can delete the above-mentioned field if it is not mentioned in the resume. Don't leave it null, rather mention like they have not included these required fields to the resume.\n\n\nJob role specified is not relevant - just mention its not relevant in the output json format \n\"job_screening_role\": \"\"\n\nWhen you can define it is, when you have no details regarding the resume mentioned above. "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -3056,
+        1584
+      ],
+      "id": "efa031bd-8316-465e-b994-e3cb05cca310",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -3056,
+        1792
+      ],
+      "id": "49d35afe-c06a-412c-bc52-3f0df33fecb9",
+      "name": "Google Gemini Chat Model7",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aHnkl9oN1Cmlc2QA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $binary.data.mimeType}}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "2d4d2d04-daee-4a28-9c26-055fff7503d5"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "81b46c77-eab0-4fbb-91c7-976f96912e0e",
+                    "leftValue": "={{ $binary.data.mimeType}}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DOC"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -4016,
+        1584
+      ],
+      "id": "89217a5d-d26f-466d-9373-36157c17804a",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Extract all text and key fields from this uploaded file.\nIdentify the document type automatically.\n\nReturn ONLY JSON output.\nFile is attached below:\n{{ $binary.data }}\nthe output that you give me should be in text format.\n\n\n\n\n\nExtract ALL text and ALL key fields from this uploaded document.\n\nImportant:\nUse ONLY the binary file.\nDO NOT guess any missing information.\nReturn ONLY JSON output.\n\nHere is the file:\n\nBinary Data Field Name: {{ $binary.data }}\nMimeType: {{$binary.data.mimeType}}\nFileName: {{$binary.data.fileName}}",
+        "options": {
+          "systemMessage": "=You are a highly accurate Document Extraction AI.\nYou MUST extract text and data from ANY file type including:\n- Images (jpg, jpeg, png)\n- Documents (doc, docx, rtf, txt)\n\nYour job:\n1. Read the uploaded file (image/doc).\n2. Perform OCR if needed.\n3. Identify and extract ALL important fields.\n4. ALWAYS return clean, strictly valid JSON.\n\nRules:\n- DO NOT guess any values.\n- If a field is not readable, return null.\n- Return JSON only. No text explanation.\n- Preserve accuracy of numbers, dates, names and document IDs.\n- Fix rotation, blur and low-quality images automatically.\n- Output must be structured and clean.\n\nHere is the JSON structure you must output:\n\n{\n\"fullName\": \"\",\n\"email\": \"\",\n\"phone\": \"\",\n\"linkedin\": \"\",\n\"github\": \"\",\n\"portfolio\": \"\",\n\"currentLocation\": \"\",\n\"skills\": [],\n\"summary\": \"\",\n\"experience\": [\n{\n\"company\": \"\",\n\"role\": \"\",\n\"startDate\": \"\",\n\"endDate\": \"\",\n\"description\": \"\"\n}\n],\n\"education\": [\n{\n\"institution\": \"\",\n\"degree\": \"\",\n\"fieldOfStudy\": \"\",\n\"startYear\": \"\",\n\"endYear\": \"\"\n}\n],\n\"projects\": [\n{\n\"title\": \"\",\n\"description\": \"\",\n\"technologies\": []\n}\n],\n\"certifications\": [],\n\"languages\": [],\n\"additionalInfo\": \"\"\n}\n\nthe output that you give me should be in text format.\n\n\n\n\nYou are a DOCUMENT EXTRACTION AI ASSISTANT.\n\nYour job:\n1. Read ONLY the uploaded binary file.\n2. Extract EXACT text from the document—NO guessing.\n3. Identify the correct document type based ONLY on visible text.\n4. Extract all key fields EXACTLY as shown in the uploaded file.\n5. Never assume or create fake data. \n   If a field does not exist → return null.\n6. Never correct spelling, never format amounts, never modify data.\n7. Support images (JPG, PNG), PDFs, and scanned documents.\n8. Output JSON only.\n\nEXTRACTION RULES:\n\"text_raw\" = full text exactly from document (no edits)\n\"fields\" = only fields actually visible on the document\nIf multiple pages → combine all pages\nIf multiple files uploaded → process one-by-one and generate array\nNO additional explanation. NO extra words. ONLY JSON.\n\nYour OCR must follow: \nNo guessing names\nNo random dates\nNo random bank names\nOnly extract what is exactly readable from the uploaded document.\n\nIf file is missing, empty, or undefined → return:\n{\n  \"success\": false,\n  \"message\": \"No binary file found.\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -3744,
+        1696
+      ],
+      "id": "c10a3b9d-fb21-4a73-bb18-035cdd93f369",
+      "name": "AI Agent4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -3792,
+        1888
+      ],
+      "id": "29d53d27-dd6a-4f66-83b7-16da41fdc894",
+      "name": "Google Gemini Chat Model8",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aHnkl9oN1Cmlc2QA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = items[0];\nconst binaries = item.binary || {};\n\nconst fileKeys = Object.keys(binaries);\n\nif (fileKeys.length === 0) {\n  return [\n    {\n      json: {\n        success: false,\n        message: \"No files found in binary data.\",\n        receivedKeys: Object.keys(item)   // debugging\n      }\n    }\n  ];\n}\n\nreturn fileKeys.map(key => {\n  return {\n    json: {\n      success: true,\n      fileName: binaries[key].fileName,\n      mimeType: binaries[key].mimeType,\n      fieldName: key\n    },\n    binary: {\n      data: binaries[key]\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4320,
+        1584
+      ],
+      "id": "e79c146d-7d0a-420f-89cd-33f58d4fb8f5",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        -4064,
+        1376
+      ],
+      "id": "33af9aa3-5bb4-41be-bc53-ada462b07a63",
+      "name": "Respond to Chat1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=you have to respond to the queries recieved in the chat {{ $('When chat message received').item.json.chatInput }} {{('When chat message received')$binary.data [0] }}",
+        "options": {
+          "systemMessage": "You are an AI Resume Screening Agent.\nYour job is to receive resumes — either uploaded individually or in bulk — and evaluate each one according to the job role specified by the user.\n\nYou will:\n\nRead the uploaded resume content\n\nUnderstand the job role for which screening is being done\n\nAnalyze the resume based on that role\n\nProvide a structured evaluation that can be passed to the next AI agent\n\nYou must adapt dynamically to any job role provided.\n\nYour evaluation must always be clear, accurate, and strictly based on the resume text."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -4464,
+        1376
+      ],
+      "id": "0111135f-79f0-472a-a23d-63d5213da6f2",
+      "name": "AI Agent5"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -4464,
+        1776
+      ],
+      "id": "33c1c75f-db3b-4fc2-94b2-11a35a736184",
+      "name": "Google Gemini Chat Model9",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "aHnkl9oN1Cmlc2QA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a technical recruitment evaluator AI.\n\nYour goal is to analyze a candidate’s resume and evaluate suitability for ANY job role provided dynamically.  \n\nJob role specified:: {{ $('Webhook').item.json.body.jobScreeningRole }}\nResume: {{ $json.output }}\n\nYou must strictly follow the structure and never add content not found in the resume.\n\nYour evaluation depends entirely on:\n1. The resume content provided.\n2. The jBelow is the job role information in JSON format.  \nUse it to generate a full JD, responsibilities, skills, screening criteria, and resume scoring rubric.\n\nJSON:\n\nProvide the output in a clean, well-structured, ATS-friendly format.ob role specified. Upon specifying the roles and responsibilities, evaluate the resume(data given)and provide score for it.\n\nIf the resume is irrelevant, just provide the reason for its irrelevancy.",
+        "options": {
+          "systemMessage": "=You are an AI Resume Screening & Job Description (JD) Generation Agent.\n\nJob role specified:: {{ $('Webhook').item.json.body.jobScreeningRole }}\nResume:: {{ $json.output }}\nYou will always receive a JSON input that contains job-related information.  \nIf the role specified resume is not recieved, just mail to hr - reshandthoshclub25@gmail.com regarding it. You have to be specific regarding the role mentioned {{ $('Webhook').item.json.body.jobScreeningRole }}\n\nYour job is to:\n\n1. Read the JSON carefully and understand the job role.\n2. Generate structured, ATS-friendly, industry-standard outputs including:\n   - Role Summary\n   - Key Responsibilities (8–12 points)\n   - Required Skills (technical + soft skills)\n   - Preferred Skills (optional)\n   - Tools/Technologies relevant to the role\n   - Experience Requirements\n   - A complete, professional Job Description (JD)\n   - Candidate Screening Criteria for the role mentioned\n   - Resume Scoring Rubric (score out of 100)\n\nFYI, with the roles and responsibilities created, you have to analyze the resume {{ $json.output }} and compare it with the generated JD and provide a detailed summary on it with the below mentioned one.\n\nYou evaluate candidates for any job role, such as teaching, software development, business development, HR, content writing, finance, etc.\n\nFollow the instructions EXACTLY.\n\nSECTION 1 — Candidate Suitability\n\nEvaluate whether the candidate is suitable for the specified job role.\n\nOutput one of the following only:\n\nSuitable\n\nPartially Suitable\n\nNot Suitable\n\nProvide a short 1–2 sentence justification.\n\nSECTION 2 — Extract Personal Information\n\nExtract the following from the resume EXACTLY as written:\n\nFull Name\n\nEmail Address\n\nPhone Number\n\nCurrent Designation / Role\n\nTotal Experience (if mentioned)\n\nIf any information is missing → leave it blank. Do NOT guess.\n\nSECTION 3 — Skills Extraction\n\nExtract all skill keywords found in the resume (technical + non-technical).\n\nFormat:\n\n[\"Skill1\", \"Skill2\", \"Skill3\", ...]\n\n\nSkills may include:\n\nTechnical skills\n\nSoft skills\n\nTools\n\nPlatforms\n\nLanguages\n\nDomain-specific skills\n\nInclude only what is actually present.\n\nSECTION 4 — Hands-On Expertise / Responsibilities\n\nList the areas where the candidate has practical hands-on experience, such as:\n\nClassroom teaching\n\nSocial media content creation\n\nClient handling & sales follow-up\n\nBackend API development\n\nData entry & documentation\n\nRecruitment and HR operations\n\nGraphic design\n\nProject coordination\n\nList only what is explicitly mentioned.\n\nSECTION 5 — Eligibility Scoring System (Generic Across All Roles)\n\nEvaluate the candidate on 10 universal criteria, each worth 1 point:\n\nRelevant education or certification for the job\n\nRelevant practical work experience\n\nRelevant skills/tools/software for the role\n\nCommunication skills\n\nProblem-solving / analytical ability\n\nDomain-specific knowledge\n\nExperience in similar responsibilities\n\nAbility to work independently\n\nAbility to work collaboratively / team skills\n\nMinimum 1 year experience (if required for role)\n\nCalculate the total score out of 10.\n\nSECTION 6 — Final Decision Logic\n\nApply this rule:\n\nIf score ≥ 70\n\nMark as:\n\nSuitable or\n\nPartially Suitable\n\nAlso state:\n\"Candidate meets the minimum criteria for this job role.\"\n\nIf score < 70\n\nMark as:\n\nNot Suitable\n\nAlso state:\n\"Candidate lacks the required criteria including (list missing points).\"\n\nSECTION 7 — FINAL OUTPUT FORMAT\n\nFinal output must follow this exact format:\n\nCandidateName:\nEmail:\nPhone:\nCurrentDesignation:\nTotalExperience:\nIsSuitableForRole:\nSkills:\nTechnicalExpertise:\nRemarks:\n\nRemarks must include:\n\nSummary of suitability\n\nScore out of 100\n\nMissing criteria (if any)\n\nClear justification in simple language\n\nRules:\n- All responses must be based on the JSON provided.\n- If any field is missing, intelligently fill with industry-standard expectations.\n- Keep tone: professional, concise, modern.\n- Use bullet points and headings.\n- Do not hallucinate company-specific data unless explicitly provided in the JSON.\n- Never ignore the JSON. Always use it as the core reference.\n- Output must always be clean, structured, and ready for real-world HR use.\n\n",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -2704,
+        1584
+      ],
+      "id": "4558b0e4-4395-4be6-9938-eede829accd5",
+      "name": "Roles & Responsibilities Definer1"
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -4752,
+        1584
+      ],
+      "id": "2bcca8a9-ea64-4234-bcfa-80de497a865f",
+      "name": "Wait1",
+      "webhookId": "a9275f12-47c3-4833-9181-b7bd8ae7174c"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk",
+          "mode": "list",
+          "cachedResultName": "Resume & Candidate Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 933302311,
+          "mode": "list",
+          "cachedResultName": "Sheet8",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit#gid=933302311"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "candidatename",
+              "displayName": "candidatename",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "currentdesignation",
+              "displayName": "currentdesignation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "totalexperience",
+              "displayName": "totalexperience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "issuitableforrole",
+              "displayName": "issuitableforrole",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score_out_of_100",
+              "displayName": "score_out_of_100",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary_of_suitability",
+              "displayName": "summary_of_suitability",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1952,
+        1424
+      ],
+      "id": "81da4fe1-19a9-40be-99b2-1715a8ae9061",
+      "name": "Append or update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LPtY4BicbXhy8uaM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk",
+          "mode": "list",
+          "cachedResultName": "Resume & Candidate Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 999996612,
+          "mode": "list",
+          "cachedResultName": "Sheet9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit#gid=999996612"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "candidatename",
+              "displayName": "candidatename",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "currentdesignation",
+              "displayName": "currentdesignation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "totalexperience",
+              "displayName": "totalexperience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "issuitableforrole",
+              "displayName": "issuitableforrole",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score_out_of_100",
+              "displayName": "score_out_of_100",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary_of_suitability",
+              "displayName": "summary_of_suitability",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1936,
+        1680
+      ],
+      "id": "658231f2-c3ea-40b1-aa5c-cd9f71345f81",
+      "name": "Append or update row in sheet3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LPtY4BicbXhy8uaM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize PDF/Text/Doc responses to ONE SAME key: \"input\"\n\nreturn items.map(item => {\n\n    let data = null;\n\n    // PDF output key = \"text\"\n    if (item.json.text) {\n        data = item.json.text;\n    }\n\n    // Word doc output key = \"output\"\n    if (item.json.output) {\n        data = item.json.output;\n    }\n\n    // Final unified JSON\n    item.json = {\n        input: data,                        // <--- unified key name\n        merged_at: new Date().toISOString() // optional\n    };\n\n    return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3344,
+        1584
+      ],
+      "id": "d712b163-622b-4cbc-bfd8-22da3c966b3f",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "sendTo": "reshandthoshclub25@gmail.com",
+        "subject": "Workflow Error Alert – Immediate Attention Required",
+        "message": "=Hi Team,  \n\nAn error has occurred in the Interview Automation Workflow, and the process has stopped unexpectedly.  \n\n📌 Error Details:  \n\nWorkflow Name: [Interview Automation / Recruitment Workflow]  \nFailed Node: {{ $json.nodeName }} (if dynamically included)  \nError Message: {{ $json.errorMessage }}  \nTime of Occurrence: {{ $json.timestamp }}  \n\nBecause of this error, the workflow could not proceed to the next steps (e.g., email sending, scheduling, database update, etc.).  \n\n🛠 Action Required:  Please check the n8n workflow logs.  Resolve the issue in the failed node.  Re-run the workflow or resume from the failed step if applicable.  \n\nLet me know if you need assistance in debugging or restarting the workflow.  \n\nBest Regards, \nAI Agent\nResh & Thosh Technologies",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -2336,
+        2304
+      ],
+      "id": "5288082d-f8a1-4d9f-a89e-0759c9787466",
+      "name": "Error Mail to Team1",
+      "webhookId": "0db2b9a8-fc42-427e-8a9d-a5b71ad70a24",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VyFpV46vgwyP6Hyx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk",
+          "mode": "list",
+          "cachedResultName": "Resume & Candidate Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1217443604,
+          "mode": "list",
+          "cachedResultName": "Sheet6",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ERxxTBRxAnHK1llfo0JC7wJ_Ev5cbCDKRzKQvj9n4Jk/edit#gid=1217443604"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2144,
+        2304
+      ],
+      "id": "a30b25ac-78eb-4bcc-a7be-ba7df1ee6ff9",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LPtY4BicbXhy8uaM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "d68b14ee-b5ad-4bb5-a2f6-4b53e9b60fae",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -5008,
+        1584
+      ],
+      "id": "6242488f-6222-4889-b953-9d5d202bfdc5",
+      "name": "Webhook",
+      "webhookId": "d68b14ee-b5ad-4bb5-a2f6-4b53e9b60fae"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Roles & Responsibilities Definer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Roles & Responsibilities Definer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roles & Responsibilities Definer": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Error Mail to Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Mail to Team": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Interview Time": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Interview Result": {
+      "main": [
+        [
+          {
+            "node": "Mail to HR",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Not Selected Mail To Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Interview Invitation1": {
+      "main": [
+        [
+          {
+            "node": "Wait for Interview Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document in Google Docs": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Conduct First Interview",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mail to HR": {
+      "main": [
+        [
+          {
+            "node": "Second Round Interview Invite Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Candidate - Not Selected List": {
+      "main": [
+        [
+          {
+            "node": "List of Unselected Candidate to HR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Generate Interview Summary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find documents in MongoDB": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Generate Interview Summary",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Not Selected Mail To Candidate": {
+      "main": [
+        [
+          {
+            "node": "Candidate - Not Selected List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Conduct First Interview",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "Send Interview Invitation1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Conduct First Interview": {
+      "main": [
+        [
+          {
+            "node": "Agentic Interview Details",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "VAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Generate Interview Summary": {
+      "main": [
+        [
+          {
+            "node": "Check Interview Result",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Interview Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VAPI": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Generate Interview Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Conduct First Interview",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event1": {
+      "main": [
+        [
+          {
+            "node": "Send Interview Invitation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Conduct First Interview",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create an event1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Roles & Responsibilities Definer1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Conduct First Interview",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append or update row in sheet3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Roles & Responsibilities Definer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent5": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model9": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent5",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roles & Responsibilities Definer1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Candidate screening info to hr",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet3": {
+      "main": [
+        [
+          {
+            "node": "Candidate screening info to hr",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Mail to Team1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bd6141cb-4e51-4d55-9941-56c383e56419",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d96b9c621caddfd8e919e6784b7f1d97133e920cc7a5da9428770336ac7057b0"
+  },
+  "id": "kyOoLptNx6Av3Ftc",
+  "tags": []
+}
