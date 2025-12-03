@@ -1,0 +1,1448 @@
+{
+  "name": "Multi Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Hi Project Manager,\n\nBased on the approved Business Analyst report, please proceed with the following:\n\n1. **Create a detailed project plan** including 3 sprints:\n   - Analysis\n   - Development\n   - QA\n\n2. **Allocate tasks** to teams:\n   - Frontend Team\n   - Backend Team\n   - Testing Team\n\n3. **Set milestone targets** and dependencies between tasks.\n\n4. **Generate a Google Sheet tracker** with:\n   - Task Owner\n   - Status\n   - Due Dates\n\n5. **Additional Actions After Approval**:\n   - Allocate a meeting room for the Development team to start their tasks.\n   - Ensure all project details from the BA report are captured in the tracker for easy reference.\n\nPlease confirm once the setup is ready so teams can start execution.\n\n",
+        "options": {
+          "systemMessage": "=You are an **Expert AI Project Manager (PM) and Lead Solutions Architect** specializing in **Agile Scrum**. Your primary and immediate task is to **analyze the project requirements** and produce a **detailed, structured technical breakdown** for the development agents.\n\n**Your Execution Flow and Responsibilities:**\n\n1.  **CRITICAL CHECK (Conditional Logic):** You **MUST** first verify the input. **ONLY PROCEED** with technical analysis and planning if the input JSON field `$json.approve` is strictly `true`. If `false`, output an approval rejection message and stop.\n2.  **Phase 1: Technical Breakdown (IMMEDIATE TASK):**\n    * **Analyze** the `$json.requirement_summary`.\n    * **Determine and explicitly state** the appropriate **Frontend Technology** (e.g., \"React with TypeScript\") and **Backend Technology** (e.g., \"Python/Flask with PostgreSQL\").\n    * Generate a detailed, technical **Sprint Plan** (milestones, dependencies) and **Team Task List** based on this technical architecture.\n3.  **Phase 2: Pre-Development Documentation (HTML/PDF Source):**\n    * Generate the complete **HTML code** (self-contained, with basic styling) for the `project_brief.html`. This document **MUST** contain the high-priority content and the **TECHNICAL BREAKDOWN** generated in Phase 1.\n    * Use your `save_file` tool to output this code as `project_brief.html`.\n4.  **Phase 3: Coordination and Tool Usage:**\n    * Trigger the meeting room allocation request via your email tool.\n    * Use your **Google Sheets tool** to create the progress tracker and the **Google Calendar tool** to schedule the meeting.\n    * The requirement content for the **Developer Agents** must come directly from the text within the `project_brief.html` file.\n\n**Final Output Requirement:**\nYou MUST conclude your process by providing a single, complete JSON object containing all required output fields. The `document_url` field must be populated after final documentation is complete."
+        }
+      },
+      "id": "8bef35cb-a63d-4ff9-9701-ad3a02223a14",
+      "name": "Project Manager Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -5056,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "clientEmail",
+              "value": "={{ $('Workflow Configuration').first().json['Client Email'] }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "clientName",
+              "value": "={{ $('Workflow Configuration').first().json['Client Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "projectName",
+              "value": "={{ $('Workflow Configuration').first().json['Project Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "emailSubject",
+              "value": "=Project Completion: {{ $('Workflow Configuration').first().json['Project Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "projectSummary",
+              "value": "={{ $('Testing Agent').first().json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "cbbe1c20-e930-4d1b-8bc9-4f67128973c8",
+      "name": "Prepare Final Email1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.clientEmail }}",
+        "subject": "={{ $json.emailSubject }}",
+        "emailType": "text",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n<style>\nbody { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }\n.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }\n.header h1 { color: #667eea; margin: 0; font-size: 28px; }\n.header p { margin: 10px 0 0 0; font-size: 16px; opacity: 0.9; }\n.content { background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; }\n.section { margin-bottom: 25px; }\n.section h2 { color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; font-size: 20px; }\n.summary-box { background: #f8f9fa; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 5px; }\n.metrics { display: table; width: 100%; margin: 20px 0; }\n.metric-item { display: table-cell; padding: 15px; text-align: center; background: #f0f4ff; border-radius: 8px; margin: 5px; }\n.metric-value { font-size: 24px; font-weight: bold; color: #667eea; }\n.metric-label { font-size: 12px; color: #666; text-transform: uppercase; }\n.footer { background: #f8f9fa; padding: 25px; text-align: center; border-radius: 0 0 10px 10px; border-top: 3px solid #667eea; }\n.cta-button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 10px 0; font-weight: bold; }\n.status-badge { display: inline-block; background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; }\nul { padding-left: 20px; }\nli { margin-bottom: 8px; }\n</style>\n</head>\n<body>\n<div class=\"header\">\n<h1>🎉 Project Completion Report</h1>\n<p>{{ $json.projectName }}</p>\n<span class=\"status-badge\">✓ SUCCESSFULLY COMPLETED</span>\n</div>\n\n<div class=\"content\">\n<div class=\"section\">\n<h2>Dear {{ $json.clientName }},</h2>\n<p>We are delighted to inform you that your project <strong>{{ $json.projectName }}</strong> has been successfully completed and is ready for deployment. Our multi-disciplinary team has worked diligently to deliver a high-quality, enterprise-grade solution that meets all specified requirements.</p>\n</div>\n\n<div class=\"summary-box\">\n<h3>📊 Executive Summary</h3>\n{{ $json.projectSummary }}\n</div>\n\n<div class=\"section\">\n<h2>🎯 Project Highlights</h2>\n<ul>\n<li><strong>Comprehensive Analysis:</strong> Detailed technical and business analysis conducted by senior specialists</li>\n<li><strong>Professional Project Management:</strong> Agile methodology with sprint-based delivery and continuous stakeholder communication</li>\n<li><strong>Modern Frontend Architecture:</strong> Responsive, accessible, and performance-optimized user interface</li>\n<li><strong>Scalable Backend Infrastructure:</strong> Enterprise-grade architecture with security and performance best practices</li>\n<li><strong>Rigorous Quality Assurance:</strong> Comprehensive testing including unit, integration, E2E, performance, and security tests</li>\n</ul>\n</div>\n\n<div class=\"section\">\n<h2>📈 Quality Metrics</h2>\n<div class=\"metrics\">\n<div class=\"metric-item\">\n<div class=\"metric-value\">✓</div>\n<div class=\"metric-label\">All Tests Passed</div>\n</div>\n<div class=\"metric-item\">\n<div class=\"metric-value\">A+</div>\n<div class=\"metric-label\">Security Grade</div>\n</div>\n<div class=\"metric-item\">\n<div class=\"metric-value\">90+</div>\n<div class=\"metric-label\">Performance Score</div>\n</div>\n<div class=\"metric-item\">\n<div class=\"metric-value\">100%</div>\n<div class=\"metric-label\">Requirements Met</div>\n</div>\n</div>\n</div>\n\n<div class=\"section\">\n<h2>🚀 Next Steps</h2>\n<ul>\n<li><strong>Deployment:</strong> Ready for production deployment to your preferred environment</li>\n<li><strong>Documentation:</strong> Complete technical documentation and user guides provided</li>\n<li><strong>Training:</strong> Team training sessions can be scheduled as needed</li>\n<li><strong>Support:</strong> Post-launch support and maintenance plan available</li>\n<li><strong>Handover:</strong> Complete code repository, credentials, and deployment scripts ready for transfer</li>\n</ul>\n</div>\n\n<div class=\"section\">\n<h2>📞 Let's Connect</h2>\n<p>We would love to schedule a final presentation to walk you through the completed project, demonstrate key features, and discuss the deployment timeline. Please let us know your availability for a meeting.</p>\n</div>\n</div>\n\n<div class=\"footer\">\n<p><strong>Thank you for choosing our services!</strong></p>\n<p>We look forward to your feedback and future collaboration.</p>\n<a href=\"#\" class=\"cta-button\">Schedule Presentation Meeting</a>\n<p style=\"margin-top: 20px; font-size: 12px; color: #666;\">\nProject Management Team<br>\nEmail: support@yourcompany.com | Phone: +1 (555) 123-4567<br>\n© 2024 Your Company Name. All rights reserved.\n</p>\n</div>\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "5b157648-b1eb-4cf6-8412-55263ec4fa1c",
+      "name": "Send Email to Client1",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        608,
+        704
+      ],
+      "webhookId": "ae667f00-7522-4018-bed8-86a92894c4e6"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "output"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "deff9198-5461-4999-88f7-7c15832c9933",
+      "name": "Aggregate Project Data",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.Deadline }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "301501cc-ce1e-4127-95bf-8002057166aa",
+      "name": "Filter Valid Deadlines",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -288,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "d54ed248-77b4-4862-98fd-2db66620bff2",
+      "name": "Gemini Model - Frontend",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -5024,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "timeline_sheet",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -64,
+        704
+      ],
+      "id": "30591f41-00e2-425c-975b-68762456b641",
+      "name": "Create spreadsheet"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9369fa96-29c6-41b8-ab66-db7fbc87392b",
+              "name": "project_summary",
+              "value": "={{ $json[\"Project name\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "36256111-1cf3-4416-8e36-ef9ebd62924f",
+              "name": "=Project_category",
+              "value": "={{ $json[\"project category\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "3da69de6-983d-4d90-817a-95b958b443d7",
+              "name": "client",
+              "value": "={{ $json['Client Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "6c72efde-f158-4a66-9c59-c75b9e463971",
+              "name": "Deadline dt",
+              "value": "={{ $json[\"Deadline Date\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "92dc1bab-8185-4893-84fa-9536cf0471fd",
+              "name": "Budget",
+              "value": "={{ $json[\"Budget (₹)\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "11b433a3-3828-45df-b76a-6816bcc1d1f4",
+              "name": "=Email",
+              "value": "={{ $json[\"Client Email\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -6880,
+        680
+      ],
+      "id": "285c977e-99b1-4270-b0bb-1429b131da34",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -2392,
+        832
+      ],
+      "id": "24780d60-df6d-4a21-aff7-d9f8ada13abc",
+      "name": "Google Gemini Chat Model"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -960,
+        704
+      ],
+      "id": "6f220425-d805-4a98-af49-8e491064ceda",
+      "name": "Wait",
+      "webhookId": "51d6be0b-357d-4c3b-8bd6-8eaa0c6dbd00"
+    },
+    {
+      "parameters": {
+        "sendTo": "prtEgmail.com",
+        "subject": "hello",
+        "message": "hello",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -736,
+        704
+      ],
+      "id": "7ec135be-d80c-487e-867c-9b4d9d51966e",
+      "name": "Test comp_mail",
+      "webhookId": "16460990-4f07-46c5-baff-458cf509716e"
+    },
+    {
+      "parameters": {
+        "sendTo": "bug@gmail.com",
+        "subject": "Bug found in Testing Phase",
+        "message": "bug query",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -960,
+        512
+      ],
+      "id": "d843ce66-14f2-4130-b076-2f89f5846006",
+      "name": "Bug_Response_mail(DevTeam)",
+      "webhookId": "ea85489c-eadf-4aa1-93c5-c912f0987c56"
+    },
+    {
+      "parameters": {
+        "content": "Any node Failue Alert message add the Google sheet  using for Email Trigger\n",
+        "height": 240,
+        "width": 464,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -7184,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "afd6d32b-8d19-4479-9127-913b188cd1e7",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 208,
+        "width": 256
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -7184,
+        632
+      ],
+      "typeVersion": 1,
+      "id": "2ee4108b-fe45-4b89-9cdd-3ac66d023f13",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Document', ``, 'string') }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Sheet', ``, 'string') }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -5944,
+        904
+      ],
+      "id": "4541b102-cacd-4cc5-92ee-6ffe5c1368a4",
+      "name": "Append or update row in sheet in Google Sheets"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=he Business Analyst Agent will take this input and produce:\n\nrequirement_document (detailed, structured requirements)\n\nUse it as input for Project Manager, Development, and Testing agents later.",
+        "options": {
+          "systemMessage": "=You are a highly analytical Business Analyst and Project Estimator.\n\nYour SOLE task is to process the project input provided from the preceding node, analyze it, and generate a complete, unified JSON object containing both the original input data and your detailed analysis/estimates.\n\nCRITICAL RULE: OUTPUT ONLY A SINGLE, VALID, FLAT JSON OBJECT. DO NOT INCLUDE ANY PROSE, INTRODUCTORY TEXT, EXPLANATIONS, OR ANY MARKDOWN FORMATTING.\n\nThe final output JSON MUST strictly adhere to this format:\n\n{\n\"project_summary\": \"{{ $json.project_name }}\",\n\"Project_category\": \"{{ $json.project_category }}\",\n\"client\": \"{{ $json.client_name }}\",\n\"requestId\": \"<Generated Unique ID for tracking, e.g., BA-2025-001>\",\n\"requirement_summary\": \"<Detailed summary of the core project requirement, written by you>\",\n\"goals\": \"<Primary project goals, written by you>\",\n\"acceptance_criteria\": \"<Key acceptance criteria>\",\n\"dependencies\": \"<External dependencies or risks>\",\n\"recommended_deadline\": \"<Proposed completion date in YYYY-MM-DD format>\",\n\"estimated_effort_days\": <Estimated total effort in whole work days (number only)>,\n\"confidence\": \"<Your confidence level (e.g., 'High', 'Medium', 'Low')>\",\n\"approve\": true\n}\n\nn8n Workflow Setup Notes (Updated)\n\nInput: Previous Code Node or Main Controller node sends project data ($json) to the BA Agent.\n\nBA Node Output:\n\nProduces the flat JSON above, including \"approve\": true or false.\n\nImmediately triggers the Email Node to send project summary + requirement to PM/Admin for approval.\n\nIF Node (Check Approval):\n\nCondition: $json.approve === true\n\nTRUE → Workflow continues automatically to Project Manager Agent.\n\nFALSE → Stop workflow or send “Not approved” notification.\n\nProject Manager Node:\n\nReceives BA JSON + approval.\n\nCreates detailed project timeline, milestones, and assigns tasks.\n\nAutomation Notes:\n\nThe workflow ensures the Email Node runs immediately after BA output.\n\nThe IF Node guarantees that the PM Agent only executes if the project is approved.\n\nAll outputs from BA and Email nodes are available for logging, tracking, or reporting."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -6080,
+        680
+      ],
+      "id": "319a401e-723f-49e8-b60b-10a3f7b58bd8",
+      "name": "B_Analyst"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the first item from the input\nconst inputItem = $input.first();\nconst originalInput = inputItem?.json;\n\n// V.V.I.P FIX: Safely read the data from the 'output' field (as shown in your example)\nconst geminiOutputText = originalInput?.output ?? ''; \n\nlet cleanJsonObject = null;\n\n// --- Attempt to Parse the AI Output ---\ntry {\n    if (geminiOutputText.length > 0) {\n        let textToParse = geminiOutputText;\n        \n        // 2. Try to extract from a markdown code block (```json...```)\n        const match = geminiOutputText.match(/```json\\s*([\\s\\S]*?)\\s*```/);\n        if (match && match[1]) {\n            textToParse = match[1].trim();\n        }\n        \n        // 3. Parse the cleaned text\n        cleanJsonObject = JSON.parse(textToParse);\n    }\n} catch (error) {\n    console.error(\"JSON Parsing Error (After Extraction):\", error);\n}\n\n// --- Fallback Mechanism ---\n// 4. If the parsing/extraction failed (cleanJsonObject is still null), \n// create a fallback JSON object using the original input data.\nif (!cleanJsonObject) {\n    console.warn(\"WARNING: Failed to parse AI JSON. Creating Fallback object.\");\n    \n    // Fallback logic using the original input keys (assuming they are available in originalInput)\n    cleanJsonObject = {\n        \"project_summary\": originalInput?.project_summary ?? 'N/A (Parse Fail)',\n        \"Project_category\": originalInput?.Project_category ?? 'N/A',\n        \"client\": originalInput?.client ?? 'N/A',\n        \"Deadline_dt\": originalInput?.[\"Deadline dt\"] ?? originalInput?.Deadline_dt ?? 'N/A',\n        \"Budget\": originalInput?.Budget ?? 0,\n        \n        // Placeholders for AI generated fields\n        \"requestId\": \"FAIL_\" + Date.now(),\n        \"requirement_summary\": \"AI Output Failed: Check the Gemini response.\",\n        \"estimated_effort_days\": 0, \n        \"confidence\": \"Critical Failure\"\n    };\n}\n\n// 5. Return the successfully parsed object OR the safe fallback object.\nreturn [{ json: cleanJsonObject }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5728,
+        608
+      ],
+      "id": "4a00d3b4-cadb-475f-a872-5f0a5ae5e813",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -6072,
+        904
+      ],
+      "id": "d6145a09-7cc0-4856-b75f-e0cb53dfbc02",
+      "name": "Google Gemini Chat Model3"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "=preethirnt2002@gmail.com",
+        "subject": "=Business Analyst:",
+        "message": "=<html>\n<body>\n  <h2>Project Analysis Complete: Business Analyst Review</h2>\n  <p>The Business Analyst has completed the initial assessment for the new project requirement.</p>\n  <hr>\n<p><b>Request ID:</b> {{ $json.requestId }}</p>\n<p><b>Project Name:</b> {{ $json.project_summary }}</p>\n<p><b>Client:</b> {{ $json.client }}</p>\n<hr>\n<h4>Requirement Summary:</h4>\n<p>{{ $json.requirement_summary }}</p>\n<h4>Goals:</h4>\n<p>{{ $json.goals }}</p>\n  <hr>\n\n  <h4>Summary:</h4>\n  <p>{{ $json.project_summary }}</p>\n\n  <h4>Goals:</h4>\n  <p>{{ $json.goals }}</p>\n\n  <h4>Acceptance Criteria:</h4>\n  <p>{{ $json.acceptance_criteria }}</p>\n\n  <h4>Dependencies/Risks:</h4>\n  <p>{{ $json.dependencies }}</p>\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -5504,
+        536
+      ],
+      "id": "84a9e0ce-c6b2-4d2c-85cf-270d8a0346a5",
+      "name": "Approval_message",
+      "webhookId": "06543a5e-5071-4298-bdfe-6a0c0bca651e"
+    },
+    {
+      "parameters": {
+        "sendTo": "to",
+        "subject": "hello",
+        "message": "mee",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        160,
+        704
+      ],
+      "id": "5b1ffe61-9dbc-401f-be8b-b0a210019e2c",
+      "name": "PM_Deploy_message",
+      "webhookId": "12ecb60a-cdf0-46af-87e7-6f6d9dc9c62f"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this module:\n{{$json.module_name}}\n\nFeature list:\n{{$json.feature_list}}\n\nPlease:\n1. Suggest suitable frontend and backend tech stack with short pros/cons.\n2. Generate REST API endpoints (CRUD) with example schemas.\n3. Estimate developer effort (in man-days) for each part.\n4. Return everything in JSON only.\n",
+        "options": {
+          "systemMessage": "\"You are a Developer Orchestrator AI. \nInput: {{ $json }}\nTask: \n1. Split the requirements into front-end and back-end tasks.\n2. Call Front-end AI Agent with front-end tasks.\n3. Call Back-end AI Agent with back-end tasks.\n4. Return both outputs as structured JSON for merging.\"\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -2464,
+        608
+      ],
+      "id": "8d40ab9c-f24c-40d6-8281-e04de183bcf8",
+      "name": "Devteam_Agent"
+    },
+    {
+      "parameters": {
+        "sendTo": "preethi@reshandthosh.com",
+        "subject": "Meeting Room Booking Confirmed",
+        "emailType": "text",
+        "message": "=Hi Project Manager,     Your requested meeting room has been successfully booked.     Booking Details:  Room Type: Standard Room ID: 103 Time Slot: 10:00 AM to 11:30 AM Duration: 1 hour 30 minutes Team: Development + PM    You can proceed with your meeting as planned. The room access has been arranged for your scheduled time.     Best regards, Admin Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -3808,
+        440
+      ],
+      "id": "0b6e5eb6-20b9-41c3-8dc5-83bae3077c99",
+      "name": "Pm available message",
+      "webhookId": "a8f220e5-8221-4b80-9f46-350e2d67137c"
+    },
+    {
+      "parameters": {
+        "sendTo": "preethi@reshandthosh.com",
+        "subject": "Meeting Room Not Available",
+        "emailType": "text",
+        "message": "=Hi Project Manager,     Unfortunately, no meeting rooms are available during your requested time slot (10:00 AM to 11:30 AM).     Please select an alternate time or contact the Admin Team for rescheduling assistance.     Next Available Slots:  12:00 PM – 1:30 PM 3:00 PM – 4:30 PM    Awaiting your confirmation to proceed with booking.     Best regards, Admin Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -4032,
+        632
+      ],
+      "id": "e11fef7a-a884-4970-aea1-12d692b41bb1",
+      "name": "not_meeting_available message",
+      "webhookId": "e4495165-6353-4e55-845f-19b5e601bf24"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -3360,
+        440
+      ],
+      "id": "1567510f-6bfe-42c6-a422-dc0645c194c3",
+      "name": "Wait1",
+      "webhookId": "2ee6418e-206c-450d-adaa-0ff79ecfb3d5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdfshift.io/v3/convert",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.html }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2912,
+        512
+      ],
+      "id": "95fa45e3-642f-449f-9055-e573558995d1",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "sendTo": "to",
+        "subject": "subject",
+        "message": "message",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -2688,
+        512
+      ],
+      "id": "96c5ddf0-b0de-4f0c-aecd-d00d0db70125",
+      "name": "Dev_Team_requiremnt message",
+      "webhookId": "8f31e76a-fdb9-4200-9475-2ccc010983c3"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "preethirnt2002@gmail.com",
+          "mode": "list",
+          "cachedResultName": "preethirnt2002@gmail.com"
+        },
+        "start": "={{ $json.Date }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -4032,
+        440
+      ],
+      "id": "d8736ca8-8256-4737-9b21-4635986143b7",
+      "name": "Create an event"
+    },
+    {
+      "parameters": {
+        "html": "{{ $json.output }}"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -3136,
+        608
+      ],
+      "id": "0efd0f77-608f-43ba-b8de-8013e9a09708",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=User Input JSON Example\n{\n  \"project_summary\": \"{{ $json.project_summary }}\",\n  \"Project_category\": \"{{ $json.Project_category }}\",\n  \"client\": \"{{ $json.client }}\",\n  \"Deadline_dt\": \"{{ $json['Deadline dt'] }}\",\n  \"Budget\": \"{{ $json.Budget }}\",\n  \"Email\": \"{{ $json.Email }}\",\n }\n\nExplanation of Fields\nField\tDescription\nproject_summary\tShort name or title of the project\nProject_category\tType of project (e.g., Mobile App, Web App)\nclient\tClient name\nDeadline_dt\tProject deadline\nBudget\tEstimated budget or price\nEmail\tClient email or contact\nrequirement_summary\tFull project requirements/description\napprove\tBoolean flag – only if true will the workflow continue (for meeting/PM logic)\nmeeting_time\tPreferred time for project discussion meeting\n\n✅ With this user input, the Main Controller Agent can:\n\nParse the project details.\n\nPopulate the JSON for sub-agents (BA, PM, Dev, QA).\n\nTrigger meeting scheduling, room allocation, and document creation automatically if approve is true.",
+        "options": {
+          "systemMessage": "=You are the MAIN CONTROLLER AGENT. Your task is to analyze the project input provided from the preceding code node and delegate work to exactly 4 sub-agents.\n\nPROJECT INPUT FOR ANALYSIS: The project input comes from the previous node and is accessible as {{ $json }}.\n\nCRITICAL RULE: OUTPUT ONLY A SINGLE, VALID, PURE JSON OBJECT. DO NOT INCLUDE ANY PROSE, INTRODUCTORY SENTENCES, OR ANY MARKDOWN FORMATTING.\n\nThe output JSON MUST strictly adhere to this format. Populate all fields with actual values from the input.\n\n{\n\"project_name\": \"{{ $json.project_summary }}\",\n\"project_category\": \"{{ $json.Project_category }}\",\n\"client_name\": \"{{ $json.client }}\",\n\"Deadline_dt\": \"{{ $json['Deadline dt'] }}\",\n\"Price\": \"{{ $json.Budget }}\",\n\"Email\": \"{{ $json.Email }}\",\n\"sub_agents\": [\n{\n\"role\": \"Business Analyst\",\n\"task\": \"Understand and document the project requirements\",\n\"output_field\": \"requirement_document\"\n},\n{\n\"role\": \"Project Manager Agent\",\n\"task\": \"Create detailed project timeline, assign tasks, and suggest milestones\",\n\"output_field\": \"project_timeline\"\n},\n{\n\"role\": \"Development Team\",\n\"task\": \"Suggest tech stack and front-end/back-end components\",\n\"output_field\": \"tech_stack_and_components\"\n},\n{\n\"role\": \"Testing Team\",\n\"task\": \"Create test scenarios and test plan\",\n\"output_field\": \"test_scenarios\"\n}\n]\n}\n\nADDITIONAL NOTES:\n\nThis is the parent agent.\n\nSub-agents must be triggered automatically based on this JSON output.\n\nEach sub-agent will use the assigned role, task, and output_field to perform its work.\n\nThe parent agent can collect all sub-agent outputs for consolidation if required."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -6656,
+        680
+      ],
+      "id": "4ffdef40-dfe9-4d48-b8f9-c99b1246e800",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -6608,
+        912
+      ],
+      "id": "6e98dcd0-aefd-4406-8063-c4c5ca843556",
+      "name": "Google Gemini Chat Model4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the output text from the Gemini model. Assuming 'response.text' is the path.\n// Adjust the path (e.g., to originalInput?.output) if necessary for your setup.\nconst inputItem = $input.first();\nconst originalInput = inputItem?.json;\nconst geminiOutputText = originalInput?.response?.text ?? originalInput?.output ?? ''; \n\nlet mainAgentData = null;\n\n// --- Step 1: Parse the JSON ---\ntry {\n    // Attempt to clean and parse the JSON string (handles ```json fences too)\n    let textToParse = geminiOutputText.match(/```json\\s*([\\s\\S]*?)\\s*```/)?.[1]?.trim() ?? geminiOutputText.trim();\n    mainAgentData = JSON.parse(textToParse);\n} catch (error) {\n    console.error(\"CRITICAL PARSING FAILURE. Using Fallback Data.\", error);\n    // Fallback: Create a structured error item\n    return [{ json: { error_status: \"Parsing Failed\", message: \"Check Gemini output.\" } }];\n}\n\n// --- Step 2: Extract and Split Data for Sub-Agents ---\nconst subAgents = mainAgentData.sub_agents;\n\nif (!Array.isArray(subAgents)) {\n    console.error(\"Sub-agents list is missing from the parsed JSON.\");\n    return [{ json: { error_status: \"No Agents Array\", message: \"Controller failed to define agents.\" } }];\n}\n\n// Map the sub_agents array to create separate input items for each 'Call Workflow' node.\nconst outputItems = subAgents.map(agent => {\n    // Create the structured input that will be passed as parameters.\n    return {\n        json: {\n            // Task-specific data (required for the Sub-Agent's prompt)\n            task_description: agent.task,\n            assigned_role: agent.role,\n            \n            // Full project context data (required for the Sub-Agent's processing)\n            project_name: mainAgentData.project_name,\n            project_category: mainAgentData.project_category,\n            client_name: mainAgentData.client_name,\n            Deadline_date: mainAgentData.Deadline_date,\n            Price: mainAgentData.Price\n        }\n    };\n});\n\n// Return the list of simplified items. Each item is now ready for a Sub-Agent call.\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6304,
+        680
+      ],
+      "id": "8117c7a2-7c9d-45e2-aa85-c6fbc55cc928",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -2040,
+        1032
+      ],
+      "id": "ee79b7e2-f323-4f2e-907c-360fe8bcbc6e",
+      "name": "OpenRouter Chat Model1"
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -2040,
+        528
+      ],
+      "id": "8042eaeb-028d-4072-9af6-b3ecfacdd4e0",
+      "name": "OpenRouter Chat Model"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4422f4b2-f367-41f9-ae4a-73f7790b7e5e",
+              "leftValue": "={{$json.testing_status}}",
+              "rightValue": "bugs_found",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1184,
+        608
+      ],
+      "id": "e0e5f03e-2075-4e6d-a98e-3aaace42f5fd",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=System Instruction:\n\"You are a Testing AI Agent. Analyze the following developer output and perform:\n1. Verify all front-end and back-end functionalities.\n2. Detect any bugs or inconsistencies.\n3. Validate dependencies and timelines.\n4. Provide recommendations for fixes.\"\n\nInput: {{ $json }}\n\nOutput:\n{\n  \"testing_status\": \"completed / pending / bugs_found\",\n  \"bugs\": [...],  // Empty if none\n  \"recommendations\": [...]\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1536,
+        608
+      ],
+      "id": "b0359ad9-c895-46cf-8a6b-1c5bf2b84125",
+      "name": "QA Test_Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\"The project specifications are: {{ $json.project_spec }}. The required tech stack is: {{ $json.tech_stack }}. Generate the Python/Flask code for the API and use the save_file tool to store it as app.py.\"",
+        "options": {
+          "systemMessage": "=\"You are an Expert Backend Developer specializing in API creation with Python/Flask. Your task is to implement the API routes and business logic exactly as specified in the user message. Do not write any frontend code (HTML, CSS, or JavaScript). Your final output must be a single Python file named app.py. You must use your available save_file tool for your code output.\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -2112,
+        808
+      ],
+      "id": "3c7a0ee4-1fe7-4a29-aefb-d37e4f53c9cf",
+      "name": "Backe_End_Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\"The project specifications are: {{ $json.project_spec }}. The required tech stack is: {{ $json.tech_stack }}. Now, generate the full code and use the save_file tool to store each file.\"",
+        "options": {
+          "systemMessage": "=\"You are an Expert Frontend Developer. Your sole focus is building the User Interface using HTML, CSS, and JavaScript. You must strictly adhere to the project spec provided in the user message. Do not write any backend logic (Python/Flask code). Your final output must be three separate files: index.html, style.css, and script.js. You must use your available save_file tool for all code output.\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -2112,
+        304
+      ],
+      "id": "c9f8d834-d5dd-4943-8d3d-2b4980c931fe",
+      "name": "Front_End_Agent"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1760,
+        608
+      ],
+      "id": "a2523788-a7e6-4b50-8469-49f01469bff2",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1464,
+        832
+      ],
+      "id": "e0d8df84-6895-409a-b2f4-5226891032f1",
+      "name": "OpenRouter Chat Model2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8dc99fa2-bd1c-4a33-80ab-cdc11bca561a",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5280,
+        536
+      ],
+      "id": "c5f9ffe8-ee7d-47b4-b4cc-3916e0f461fb",
+      "name": "Approve message_condition"
+    },
+    {
+      "parameters": {
+        "formTitle": "GAME CREATION FORM",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Project name",
+              "placeholder": "Ex:Hotel Booking App",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "project category",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Mobile App"
+                  },
+                  {
+                    "option": "Web App"
+                  },
+                  {
+                    "option": "Game"
+                  },
+                  {
+                    "option": "Etc..."
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Budget (₹)",
+              "fieldType": "number",
+              "placeholder": "e.g., 500000",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Deadline Date",
+              "fieldType": "date",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "AI Features Required?",
+              "fieldType": "checkbox",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Yes"
+                  },
+                  {
+                    "option": "No"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Client Name",
+              "placeholder": "Ex:Mr.Rakesh",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Client Email",
+              "fieldType": "email",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -7104,
+        680
+      ],
+      "id": "d5415184-8557-42b7-b6d6-e08d2a2de3c0",
+      "name": "Project_Builder",
+      "webhookId": "2cd30633-271b-4bdd-a0f3-1c4385f40f50"
+    },
+    {
+      "parameters": {
+        "sendTo": "preethirnt2002@gmail.com",
+        "subject": "Meeting Room Allocation Request",
+        "emailType": "text",
+        "message": "=Hi Admin,\n\nThis is a request from the Project Manager to allocate a meeting room for the upcoming project discussion with the development team.\n\nMeeting Details:\n\nRequested Room Type: Standard / Conference\nPreferred Time Slot: 12:00 to 2:00\nTotal Duration: 1h 30m\n\nKindly confirm if any room is available for this slot.\nIf not available, please suggest an alternate time slot.\n\nThanks & Regards,\nProject Manager\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -4704,
+        512
+      ],
+      "id": "9b5d038b-5715-43e9-97a6-d6306605148f",
+      "name": "Meeting room allocate request message",
+      "webhookId": "aca126d5-e898-4323-8876-99edb8c1f90d"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7595b18f-04f9-4c40-8ecd-54f1cd65b516",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Available",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -4256,
+        536
+      ],
+      "id": "3e62b162-b8ee-4c3e-9d80-4b3acde7cf87",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1WY2csSrLlR9pcIcdc-XmMfFy9a4v8QSRrSpu5-1HTak",
+          "mode": "list",
+          "cachedResultName": "Room_Available_sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WY2csSrLlR9pcIcdc-XmMfFy9a4v8QSRrSpu5-1HTak/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WY2csSrLlR9pcIcdc-XmMfFy9a4v8QSRrSpu5-1HTak/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -4480,
+        512
+      ],
+      "id": "87a79fff-c445-4925-9fbc-ef36e5104728",
+      "name": "Get row(s) in sheet"
+    },
+    {
+      "parameters": {
+        "sendTo": "preethirnt2002@gmail.com",
+        "subject": "subject",
+        "emailType": "text",
+        "message": "Hii Dec team, ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -3584,
+        440
+      ],
+      "id": "7498addd-fb22-45a8-8e1d-0b68ffc13746",
+      "name": "Devteam_meeting message",
+      "webhookId": "79cb3789-7c0b-402f-adc7-b9282501c76c"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Project Manager Agent": {
+      "main": [
+        [
+          {
+            "node": "Meeting room allocate request message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Final Email1": {
+      "main": [
+        [
+          {
+            "node": "Send Email to Client1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Project Data": {
+      "main": [
+        [
+          {
+            "node": "Filter Valid Deadlines",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Valid Deadlines": {
+      "main": [
+        [
+          {
+            "node": "Create spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Model - Frontend": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Project Manager Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "PM_Deploy_message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Devteam_Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Test comp_mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test comp_mail": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Project Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "B_Analyst",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B_Analyst": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Approval_message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Project Manager Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "B_Analyst",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approval_message": {
+      "main": [
+        [
+          {
+            "node": "Approve message_condition",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PM_Deploy_message": {
+      "main": [
+        [
+          {
+            "node": "Prepare Final Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Devteam_Agent": {
+      "main": [
+        [
+          {
+            "node": "Backe_End_Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Front_End_Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pm available message": {
+      "main": [
+        [
+          {
+            "node": "Devteam_meeting message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Dev_Team_requiremnt message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dev_Team_requiremnt message": {
+      "main": [
+        [
+          {
+            "node": "Devteam_Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "Pm available message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Devteam_Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "B_Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Bug_Response_mail(DevTeam)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QA Test_Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Backe_End_Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Front_End_Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Front_End_Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backe_End_Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "QA Test_Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "QA Test_Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approve message_condition": {
+      "main": [
+        [
+          {
+            "node": "Project Manager Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "B_Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Project_Builder": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meeting room allocate request message": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "not_meeting_available message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Devteam_meeting message": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d9e28099-77b3-4d75-8fac-fa5fd60ee9ed",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "66e601c3b9a4ffec2031ea0958c5ca1e5a8d4a886bbe4c5d068373e9c8066ae8"
+  },
+  "id": "lJgdz1a2v5nwuYFc",
+  "tags": []
+}
