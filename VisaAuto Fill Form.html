@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Apply for Oman Visa — Sample Form</title>
+<style>
+  :root{
+    --accent:#075e54;
+    --accent-2:#128c7e;
+    --bg:#f5f5f5;
+    --card:#ffffff;
+    --muted:#666;
+    --danger:#d9534f;
+    --success:#28a745;
+    font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:linear-gradient(180deg, #f5f7f6 0%, #eef2f1 100%);
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:28px;
+    color:#111;
+  }
+
+  .container{
+    width:100%;
+    max-width:1100px;
+    background:var(--card);
+    border-radius:12px;
+    box-shadow:0 8px 30px rgba(15,30,20,0.08);
+    overflow:hidden;
+    display:grid;
+    grid-template-columns: 420px 1fr;
+    gap:0;
+  }
+
+  /* Left column — header + quick info */
+  .left{
+    background:linear-gradient(180deg,var(--accent),var(--accent-2));
+    color:#fff;
+    padding:28px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .brand{
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  .brand .logo {
+    width:48px; height:48px; border-radius:8px;
+    background:rgba(255,255,255,0.12);
+    display:grid; place-items:center; font-weight:700;
+  }
+  h1{font-size:20px;margin:0}
+  p.lead{margin:0;color:rgba(255,255,255,0.9); font-size:14px}
+  .contact{font-size:13px; opacity:0.95}
+  .steps{
+    background:rgba(255,255,255,0.06);
+    padding:12px; border-radius:8px;
+  }
+  .steps h4{margin:0 0 8px 0; font-size:14px}
+  .steps ol{margin:0;padding-left:18px;color:rgba(255,255,255,0.9)}
+  .left footer{font-size:12px; opacity:0.9}
+
+  /* Right column — form */
+  .right{
+    padding:20px 24px;
+    max-height:85vh;
+    overflow:auto;
+  }
+  form{display:flex; flex-direction:column; gap:18px}
+  .row{display:flex; gap:12px; flex-wrap:wrap}
+  .col{flex:1 1 200px; min-width:160px}
+  label{display:block; font-size:13px; margin-bottom:6px; color:var(--muted)}
+  input[type="text"], input[type="date"], input[type="number"], select, textarea{
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid #ddd; font-size:14px;
+    background:#fff; color:#111;
+  }
+  textarea{min-height:84px; resize:vertical}
+  .section{
+    border:1px solid #eee; padding:14px; border-radius:10px; background:#fafafa;
+  }
+  .section h3{margin:0 0 10px 0; font-size:16px}
+  .small{font-size:13px; color:#777; margin-top:6px}
+
+  /* file uploads */
+  .file-uploader{
+    border:1px dashed #ddd; padding:10px; border-radius:8px; background:#fff;
+  }
+  .file-list{margin-top:8px; display:flex; flex-direction:column; gap:8px}
+  .file-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; border-radius:8px; background:#f8f8f8; border:1px solid #eee}
+  .file-row .meta{font-size:13px; color:#333}
+  .file-row button{background:transparent; border:none; color:var(--danger); cursor:pointer; font-weight:600}
+
+  /* actions */
+  .actions{display:flex; gap:12px; align-items:center}
+  .btn{padding:10px 14px; border-radius:10px; border:none; cursor:pointer; font-weight:600}
+  .btn.primary{background:var(--accent); color:#fff}
+  .btn.ghost{background:#fff; border:1px solid #ddd}
+  .hint{font-size:13px; color:#666}
+
+  /* small responsive */
+  @media (max-width:980px){
+    .container{grid-template-columns:1fr; padding-bottom:18px}
+    .left{order:2}
+    .right{order:1}
+  }
+</style>
+</head>
+<body>
+
+<div class="container" role="main" aria-labelledby="pageTitle">
+  <aside class="left" aria-hidden="false">
+    <div class="brand" role="img" aria-label="Visa Assistant">
+      <div class="logo">VL</div>
+      <div>
+        <h1 id="pageTitle">Apply for Oman Visa</h1>
+        <p class="lead">Fast e-visa processing · Secure · Trusted</p>
+      </div>
+    </div>
+
+    <div class="contact">
+      <div><strong>Email:</strong> info@example.com</div>
+      <div><strong>Phone:</strong> +91 22 1234 5678</div>
+    </div>
+
+    <div class="steps" aria-hidden="false">
+      <h4>How it works</h4>
+      <ol>
+        <li>Complete basic details</li>
+        <li>Upload required documents</li>
+        <li>We verify & submit</li>
+      </ol>
+    </div>
+
+    <footer style="margin-top:auto; font-size:13px; opacity:0.95">
+      <div><strong>Note:</strong> We never store your document files on the AI agent. Files are processed securely.</div>
+    </footer>
+  </aside>
+
+  <section class="right" aria-label="Visa application form">
+    <form id="visaForm" autocomplete="off" novalidate>
+      <!-- Visa details -->
+      <div class="section" id="visaDetails">
+        <h3>Visa Details</h3>
+
+        <div class="row">
+          <div class="col">
+            <label for="visaType">Visa Type *</label>
+            <select id="visaType" required>
+              <option value="">-- Select --</option>
+              <option value="evisa">E-Visa</option>
+              <option value="stamped">Stamped Visa</option>
+            </select>
+          </div>
+
+          <div class="col">
+            <label for="country">Country *</label>
+            <select id="country" required>
+              <option value="Oman" selected>Oman</option>
+              <!-- you can populate more countries if needed -->
+            </select>
+          </div>
+
+          <div class="col">
+            <label for="visaCategory">Visa Category *</label>
+            <select id="visaCategory" required>
+              <option value="">-- Select --</option>
+              <option>Tourist</option>
+              <option>Business</option>
+              <option>Visit</option>
+              <option>Transit</option>
+              <option>Student</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div class="col">
+            <label for="purpose">Purpose of Visit *</label>
+            <select id="purpose" required>
+              <option value="">-- Select --</option>
+              <option>Tourism</option>
+              <option>Business</option>
+              <option>Medical</option>
+              <option>Family Visit</option>
+              <option>Transit</option>
+            </select>
+          </div>
+
+          <div class="col">
+            <label for="processPriority">Process Priority</label>
+            <select id="processPriority">
+              <option value="">Standard</option>
+              <option value="urgent">Urgent (Extra fees)</option>
+            </select>
+          </div>
+
+          <div class="col">
+            <label for="nationality">Nationality *</label>
+            <select id="nationality" required>
+              <option value="">-- Select --</option>
+              <option>India</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px; align-items:center">
+          <div style="min-width:160px">
+            <label for="adultCount">Adult(s) (Above 18)</label>
+            <input type="number" id="adultCount" min="1" max="10" value="1" />
+          </div>
+
+          <div style="min-width:160px">
+            <label for="childCount">Child (Below 18)</label>
+            <input type="number" id="childCount" min="0" max="10" value="0" />
+          </div>
+
+          <div style="flex:1">
+            <label>Travel Days</label>
+            <div style="display:flex; gap:8px;">
+              <input type="date" id="travelStart" />
+              <input type="date" id="travelEnd" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Travel & Flight details -->
+      <div class="section" id="travelDetails">
+        <h3>Travel / Flight Details</h3>
+
+        <div class="row">
+          <div class="col">
+            <label for="originCity">Origin City</label>
+            <input id="originCity" type="text" placeholder="City of departure" />
+          </div>
+          <div class="col">
+            <label for="airlineIn">Airline (Arrival)</label>
+            <input id="airlineIn" type="text" placeholder="Airline name" />
+          </div>
+          <div class="col">
+            <label for="flightNoIn">Flight No (Arrival)</label>
+            <input id="flightNoIn" type="text" placeholder="e.g. XY123" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div class="col">
+            <label for="destCity">Destination City</label>
+            <input id="destCity" type="text" placeholder="City in Oman" value="Muscat" />
+          </div>
+          <div class="col">
+            <label for="airlineOut">Airline (Departure)</label>
+            <input id="airlineOut" type="text" placeholder="Airline name" />
+          </div>
+          <div class="col">
+            <label for="flightNoOut">Flight No (Departure)</label>
+            <input id="flightNoOut" type="text" placeholder="e.g. XY456" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents -->
+      <div class="section" id="uploadSection">
+        <h3>Upload Documents</h3>
+        <p class="small">Allowed types: jpg, jpeg, png, pdf. Maximum 10 MB per file.</p>
+
+        <div class="row" style="gap:10px">
+          <div style="flex:1">
+            <label>Passport Size Colour Photograph *</label>
+            <div class="file-uploader">
+              <input type="file" id="photo" accept="image/*" />
+              <div class="file-list" id="photoList"></div>
+            </div>
+          </div>
+
+          <div style="flex:1">
+            <label>Passport Front Page (colour) *</label>
+            <div class="file-uploader">
+              <input type="file" id="passportFront" accept="image/*,application/pdf" />
+              <div class="file-list" id="passportFrontList"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px; gap:10px">
+          <div style="flex:1">
+            <label>Passport Last Page (if any)</label>
+            <div class="file-uploader">
+              <input type="file" id="passportLast" accept="image/*,application/pdf" />
+              <div class="file-list" id="passportLastList"></div>
+            </div>
+          </div>
+
+          <div style="flex:1">
+            <label>Residential Proof *</label>
+            <div class="file-uploader">
+              <input type="file" id="resProof" accept="image/*,application/pdf" multiple />
+              <div class="file-list" id="resProofList"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <label>Financial Documents (multiple) *</label>
+          <div class="file-uploader">
+            <input type="file" id="financialDocs" accept="image/*,application/pdf" multiple />
+            <div class="file-list" id="financialDocsList"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <label>Insurance / Others (optional)</label>
+          <div class="file-uploader">
+            <input type="file" id="others" accept="image/*,application/pdf" multiple />
+            <div class="file-list" id="othersList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Personal details -->
+      <div class="section" id="personalDetails">
+        <h3>Personal Details (Lead Applicant)</h3>
+
+        <div class="row">
+          <div class="col">
+            <label for="title">Title *</label>
+            <select id="title" required>
+              <option value="">-- Select --</option>
+              <option>Mr</option>
+              <option>Miss</option>
+              <option>Mrs</option>
+            </select>
+          </div>
+
+          <div class="col">
+            <label for="givenName">Given name *</label>
+            <input id="givenName" type="text" required />
+          </div>
+
+          <div class="col">
+            <label for="surname">Surname *</label>
+            <input id="surname" type="text" required />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div class="col">
+            <label for="gender">Gender *</label>
+            <select id="gender" required>
+              <option value="">-- Select --</option>
+              <option>Male</option><option>Female</option><option>Other</option>
+            </select>
+          </div>
+          <div class="col">
+            <label for="dob">Date of Birth *</label>
+            <input type="date" id="dob" required />
+          </div>
+          <div class="col">
+            <label for="pob">Country of Birth</label>
+            <input id="pob" type="text" />
+          </div>
+        </div>
+
+        <div style="margin-top:10px" class="row">
+          <div class="col">
+            <label for="passportNo">Passport Number *</label>
+            <input id="passportNo" type="text" required />
+          </div>
+          <div class="col">
+            <label for="passportIssue">Passport Issue Date *</label>
+            <input id="passportIssue" type="date" required />
+          </div>
+          <div class="col">
+            <label for="passportExpiry">Passport Expiry Date *</label>
+            <input id="passportExpiry" type="date" required />
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <label for="address">Full Address *</label>
+          <textarea id="address" required placeholder="House / Street / City / State / PINCODE"></textarea>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="hint">All * fields are required unless marked optional.</div>
+        <div class="actions">
+          <button type="button" class="btn ghost" id="saveDraft">Save draft</button>
+          <button type="submit" class="btn primary">Submit Application</button>
+        </div>
+      </div>
+    </form>
+  </section>
+</div>
+
+<!-- Your other scripts (like form submit) remain above this -->
+
+<script>
+window.onload = async function () {
+  try {
+    const res = await fetch("https://n8n0905preethi.app.n8n.cloud/webhook-test/visa-autofill");
+    if (!res.ok) throw new Error('Failed to fetch autofill data');
+    const data = await res.json();
+
+    // Map data to form fields
+    const fieldMap = {
+      givenName: "givenName",
+      surname: "surname",
+      passportNo: "passportNo",
+      dob: "dob",
+      gender: "gender",
+      address: "address",
+      visaType: "visaType",
+      visaCategory: "visaCategory",
+      nationality: "nationality",
+      title: "title",
+      pob: "pob",
+      processPriority: "processPriority",
+      purpose: "purpose",
+      adultCount: "adultCount",
+      childCount: "childCount",
+      travelStart: "travelStart",
+      travelEnd: "travelEnd",
+      originCity: "originCity",
+      airlineIn: "airlineIn",
+      flightNoIn: "flightNoIn",
+      destCity: "destCity",
+      airlineOut: "airlineOut",
+      flightNoOut: "flightNoOut",
+      passportIssue: "passportIssue",
+      passportExpiry: "passportExpiry"
+    };
+
+    Object.keys(fieldMap).forEach(key => {
+      const el = document.getElementById(fieldMap[key]);
+      if (el && data[key] !== undefined) el.value = data[key];
+    });
+
+    console.log("Autofill complete");
+
+  } catch (e) {
+    console.error("Autofill failed", e);
+  }
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelector('select[name="Visa_type"]').value = "Tourist";
+  document.querySelector('select[name="Visa_category"]').value = "Single Entry";
+  document.querySelector('select[name="purpose_of_visit"]').value = "Leisure";
+  document.querySelector('select[name="nationality"]').value = "India";
+  document.querySelector('input[name="adults"]').value = "1";
+  document.querySelector('input[name="children"]').value = "0";
+  document.querySelector('input[name="start_date"]').value = "27-11-2025";
+  document.querySelector('input[name="end_date"]').value = "30-11-2025";
+});
+
+
+</script>
+
+</body>
+</html>
+
+

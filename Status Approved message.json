@@ -1,0 +1,330 @@
+{
+  "name": "Status Approved message",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2da79665-a785-4159-a017-40ebb01a6ef2",
+              "name": "Name",
+              "value": "={{ $json.body.Name }}",
+              "type": "string"
+            },
+            {
+              "id": "2aa5c911-b0fb-477b-aea7-e42dc92acf07",
+              "name": "Email",
+              "value": "={{ $json.body.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "1ec01906-4af6-4775-986d-8f60d228447a",
+              "name": "Status",
+              "value": "={{ $json.body.Approved }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        0
+      ],
+      "id": "b6c82120-92bd-42b2-900a-bf7cc6dd5641",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Z5QoOi_0-VgSTWPT5gSQEhck7Kyh_mVz9tMYZB_zsNc",
+          "mode": "list",
+          "cachedResultName": "Task1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z5QoOi_0-VgSTWPT5gSQEhck7Kyh_mVz9tMYZB_zsNc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z5QoOi_0-VgSTWPT5gSQEhck7Kyh_mVz9tMYZB_zsNc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.Name }}",
+            "Email": "={{ $json.Email }}",
+            "Approved": "={{ $json.Status }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Approved",
+              "displayName": "Approved",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        656,
+        0
+      ],
+      "id": "7bb6d3c9-a45f-4ad1-a7d3-e4ed0811dca9",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "eh80ekdvYaR4g9fB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1344,
+        -80
+      ],
+      "id": "294720d7-6692-423c-b731-5a970fb859f5",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "22ed501c-9a22-406e-b4cf-4b774e93833a",
+              "leftValue": "={{ $json.Approved }}",
+              "rightValue": "on",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        0
+      ],
+      "id": "a300f7fd-fd47-45ef-aed0-2a3503e627d8",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "hr@gmail.com",
+        "subject": "Status Check",
+        "emailType": "text",
+        "message": "={{ $json }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        96
+      ],
+      "id": "7c74f992-7aaa-4a2c-8579-2ab7c98f225f",
+      "name": "Error_Alert message",
+      "webhookId": "f59726f5-b408-44c2-8f78-130631ec5c4f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NRhE4djWXTnUGIpy",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.Email }}",
+        "subject": "Status Approved Message",
+        "emailType": "text",
+        "message": "=Hi  , \nGood Morning {{ $('Append row in sheet').item.json.Name }},\nCongratulations !!!!  You have Selected \n\n\n\nRegards, \nB.Preethu\n",
+        "options": {
+          "appendAttribution": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        -80
+      ],
+      "id": "afbb82bf-809d-4c65-9c7d-cc9614e20ac6",
+      "name": "Approved Message",
+      "webhookId": "137b849f-0758-4cd3-9918-032a85c45af0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NRhE4djWXTnUGIpy",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "submit-form",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "467c93a6-d485-4bfa-ab99-d718365bc33d",
+      "name": "Webhook",
+      "webhookId": "33160a9f-1dee-4173-801c-fd67f5a06c3f"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "4e0bdfc0-5e70-4519-8af0-48e112bb6df0",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Approved Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error_Alert message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved Message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "152114b9-9e87-497e-a3b1-890b05647461",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "66e601c3b9a4ffec2031ea0958c5ca1e5a8d4a886bbe4c5d068373e9c8066ae8"
+  },
+  "id": "VwUnPhPZh96G01Fo",
+  "tags": []
+}
