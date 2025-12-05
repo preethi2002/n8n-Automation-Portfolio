@@ -1,0 +1,349 @@
+{
+  "name": "Existing Sheet Rows validation",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Taxing Calculation Form",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Phone Number",
+              "fieldType": "number",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b135b6f8-6c5e-47aa-991d-6599b6acd2f4",
+      "name": "On form submission",
+      "webhookId": "eaa7164f-9a3b-44d4-9287-3e70b144926c"
+    },
+    {
+      "parameters": {
+        "jsCode": "const newphne=items[0].json.Phone;\nconst existingdata=$items(\"Get row(s) in sheet\", 0);\nlet Duplicated=false;\nfor(let row of existingdata)\n  {\n    if(row.json.Phone==newphne){\n      Duplicated=true;\n      break;\n    }\n    \n    \n  }\nitems[0].json.Status=Duplicated ? \"Duplicate\" : \"New\"\nreturn [items[0]];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "0d33e377-5a51-4395-875c-d1d808a354b9",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a17095ca-e07f-4463-af62-e12d68f9541e",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Duplicate",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "b7d1c3bf-d408-4af5-94cd-ad01ca19a5b0",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "preethirnt20022@gmail.com",
+        "subject": "Tax Calulation report",
+        "emailType": "text",
+        "message": "=Hi ,  \nGood evening {{ $json.Name }},\n\n\nAttachment:",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        896,
+        -96
+      ],
+      "id": "c5de3580-a188-4bab-8c4a-cd1c690b337c",
+      "name": "Send a message",
+      "webhookId": "8535fc88-64f3-445c-8b88-a2f451ba578e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NRhE4djWXTnUGIpy",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA",
+          "mode": "list",
+          "cachedResultName": "Visa_File_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1778524535,
+          "mode": "list",
+          "cachedResultName": "Sheet4",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit#gid=1778524535"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "OrderId",
+              "displayName": "OrderId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Amount",
+              "displayName": "Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PaymentMode",
+              "displayName": "PaymentMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "formMode",
+              "displayName": "formMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Approval",
+              "displayName": "Approval",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "threadId",
+              "displayName": "threadId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "labelIds",
+              "displayName": "labelIds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        96
+      ],
+      "id": "b1fcd4d5-8b64-42b7-a106-de9168691c2d",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "eh80ekdvYaR4g9fB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA",
+          "mode": "list",
+          "cachedResultName": "Visa_File_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 10600618,
+          "mode": "list",
+          "cachedResultName": "Sheet5",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit#gid=10600618"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Phone",
+              "lookupValue": "={{ $json[\"Phone Number\"] }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        -128
+      ],
+      "id": "c60ea95e-3029-4bca-85ee-013fca7301e6",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "eh80ekdvYaR4g9fB",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ab380c1d-d932-4789-8119-45d7793ea1a7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "66e601c3b9a4ffec2031ea0958c5ca1e5a8d4a886bbe4c5d068373e9c8066ae8"
+  },
+  "id": "36TBUTMwM1Cr1yiy",
+  "tags": []
+}
