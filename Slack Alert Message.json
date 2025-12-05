@@ -1,0 +1,251 @@
+{
+  "name": "Slack Alert Message",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Slack Notification Form",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Satus",
+              "fieldType": "checkbox",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Failed"
+                  },
+                  {
+                    "option": "Success"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        96,
+        -128
+      ],
+      "id": "8abf3bd1-9e62-4806-bdd5-9d8c6cf0e4e1",
+      "name": "On form submission",
+      "webhookId": "fd375bc9-5c28-41e3-90f0-4e1707d1c1ea"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5a52c23-a229-42fb-ad05-bdb111ff334a",
+              "name": "Name",
+              "value": "={{ $json.Name }}",
+              "type": "string"
+            },
+            {
+              "id": "adfb8ba8-c6e1-4030-9eb5-6713c17ede96",
+              "name": "Status",
+              "value": "={{ $json.Satus[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "59e7f804-ccd7-410b-83bf-b901f0cd4c24",
+              "name": "Time",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        -128
+      ],
+      "id": "a2b69fbd-5c02-48c7-b121-12f32655566f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA",
+          "mode": "list",
+          "cachedResultName": "Visa_File_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 10600618,
+          "mode": "list",
+          "cachedResultName": "Sheet5",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit#gid=10600618"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "Phone"
+          ],
+          "schema": [
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        768,
+        -224
+      ],
+      "id": "8844816e-ab92-44da-9a93-51dee0bd7e34",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "eh80ekdvYaR4g9fB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A1VQ4DP6G",
+          "mode": "list",
+          "cachedResultName": "all-resh-and-thosh"
+        },
+        "text": "=\n🚨 Alert from n8n\nName:{{ $json.Name }}\nStatus :{{ $json.Status }},\nTime {{ $json.Time }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        768,
+        -32
+      ],
+      "id": "8910baea-f221-4e77-86db-3eccb1b01c54",
+      "name": "Failed Alert Message",
+      "webhookId": "e1932ada-0f84-43fa-b6f9-9ffabf4c81bf",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "qlz9R5RllqYaK4hj",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a6baf86b-ac55-4145-a645-794fdcc85b80",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        -128
+      ],
+      "id": "d89fe47c-e5f3-4c69-831a-f7271bbe9369",
+      "name": "Success/Fail Checkup"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Success/Fail Checkup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success/Fail Checkup": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failed Alert Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0ab68080-4061-4d2e-8403-4e6773369fb6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "66e601c3b9a4ffec2031ea0958c5ca1e5a8d4a886bbe4c5d068373e9c8066ae8"
+  },
+  "id": "Ljg11MH6m2KO7fyz",
+  "tags": []
+}
