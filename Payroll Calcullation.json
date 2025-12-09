@@ -1,0 +1,286 @@
+{
+  "name": "Payroll Calcullation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        296
+      ],
+      "id": "5793e573-5aff-4d68-92b2-09bbc46de200",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA",
+          "mode": "list",
+          "cachedResultName": "Visa_File_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 10600618,
+          "mode": "list",
+          "cachedResultName": "Sheet5",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit#gid=10600618"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        296
+      ],
+      "id": "3ce29052-f925-43c6-aa0e-46db449ad12c",
+      "name": "Attendance sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "eh80ekdvYaR4g9fB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = items.map(item => {\n  const basic = Number(item.json.BasicSalary);\n  const leaves = Number(item.json.Leaves);\n\n  const perDay = basic / 30;\n  const deduction = perDay * leaves;\n  const netSalary = basic - deduction;\n\n  return {\n    json: {\n      name: item.json.Name,\n      email: item.json.Email,\n      basic,\n      leaves,\n      perDay: Math.round(perDay),\n      deduction: Math.round(deduction),\n      netSalary: Math.round(netSalary)\n    }\n  };\n});\n\nreturn rows;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        152
+      ],
+      "id": "e38b66e9-9fc2-4fd2-9e49-1612f6196cde",
+      "name": "Salary Calculation"
+    },
+    {
+      "parameters": {
+        "sendTo": "=santhoshkannan120@gmail.com",
+        "subject": "Your Salary Payslip",
+        "message": "=<div style=\"font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px;\">\n  <div style=\"max-width: 600px; background-color: #ffffff; margin: auto; padding: 20px; border-radius: 8px;\">\n    \n    <h2 style=\"color: #2c3e50; text-align: center;\">Salary Payslip Notification</h2>\n\n    <p style=\"font-size: 14px; color: #333;\">\n      Hi <b>{{ $('Salary Calculation').item.json.name }}</b>,\n    </p>\n\n    <p style=\"font-size: 14px; color: #333;\">\n      We are pleased to inform you that your salary for this month has been successfully processed.\n    </p>\n\n    <div style=\"background-color: #f0f3f7; padding: 12px; border-radius: 6px; margin: 15px 0;\">\n      <p style=\"margin: 0; font-size: 14px;\">\n        <b>Net Salary:</b> ₹{{ $('Salary Calculation').item.json.netSalary }}\n      </p>\n    </div>\n\n    <p style=\"font-size: 14px; color: #333;\">\n      Please find your attached payslip for detailed earnings and deductions.\n    </p>\n\n    <p style=\"font-size: 14px; color: #333;\">\n      If you have any questions regarding your salary, feel free to contact the HR team.\n    </p>\n\n    <br>\n\n    <p style=\"font-size: 14px; color: #333;\">\n      Regards, <br>\n      <b>HR Department</b>\n    </p>\n\n    <hr style=\"margin-top: 20px;\">\n\n  \n\n  </div>\n</div>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        -16
+      ],
+      "id": "5697aec4-0136-4728-b606-24409c9f0eb8",
+      "name": "Auto Email Send",
+      "webhookId": "2ac9e39c-b75d-474e-aec2-e9d25d21c103",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NRhE4djWXTnUGIpy",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A1VQ4DP6G",
+          "mode": "list",
+          "cachedResultName": "all-resh-and-thosh"
+        },
+        "text": "=✅ Payroll completed for {{$json.name}} – Salary ₹{{$json.netSalary}}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1168,
+        320
+      ],
+      "id": "ff88e54a-ecfc-4ffa-aeb1-b2010c5f4fe4",
+      "name": "HR Alert message",
+      "webhookId": "24065ec3-112f-4a72-97c2-ce453ef89afe",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "qlz9R5RllqYaK4hj",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        296
+      ],
+      "id": "79ff60b9-0e6d-4159-81f9-c59163fee184",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        672,
+        344
+      ],
+      "id": "be415cdf-5676-4c73-8e3c-613d07b32ae9"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        896,
+        152
+      ],
+      "id": "695a1ba8-f563-444c-b53a-4dd258366110",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me1",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        80
+      ],
+      "id": "e23d98ae-74ae-4317-9203-1b5c5d67d025"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Attendance sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attendance sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salary Calculation": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto Email Send": {
+      "main": [
+        [
+          {
+            "node": "Replace Me1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Salary Calculation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "HR Alert message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Auto Email Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d9126e10-b460-4752-968c-38009bee2170",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "66e601c3b9a4ffec2031ea0958c5ca1e5a8d4a886bbe4c5d068373e9c8066ae8"
+  },
+  "id": "YGhHo9w89V7o4MzA",
+  "tags": []
+}
