@@ -1,0 +1,306 @@
+{
+  "name": "Automate Lead management System",
+  "nodes": [
+    {
+      "parameters": {
+        "sendTo": "preethirnt2002@gmail.com",
+        "subject": "Lead Priority",
+        "emailType": "text",
+        "message": "=Subject: New Lead Received – {{ $json[\"Full Name\"] }}\n\nDear Sales Team,\n\nA new lead has been successfully submitted. Please find the details below:\n\n----------------------------------------\nLead Details\n----------------------------------------\n\nFull Name       : {{ $json[\"Full Name\"] }}\nEmail Address   : {{ $json[\"Email Address\"] }}\nPhone Number    : {{ $json[\"Phone Number\"] }}\nCompany Name    : {{ $json[\"Company Name\"] }}\n\nPriority Level  : {{ $json[\"Priority Level\"] }}\nLead Source     : {{ $json[\"Lead Source\"] }}\n\n\n\n----------------------------------------\nSubmitted On    : {{ $now }}\n----------------------------------------\n\nKindly contact the lead at the earliest.\n\nBest Regards,  \nAutomation System  \nPowered by n8n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "e6775a92-d57f-4808-884a-69e56799aefc",
+      "name": "High priority email send",
+      "webhookId": "15fa32e7-c82b-4ab7-9b9f-c77e5d1352e6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NRhE4djWXTnUGIpy",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "481c497a-9eb9-4270-b316-1bbd74ad6d65",
+              "leftValue": "={{ $json['Priority Level'] }}",
+              "rightValue": "High",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "a9e34b28-ba67-48b8-a576-1caaa5cf2bd6",
+      "name": "Priority Check"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA",
+          "mode": "list",
+          "cachedResultName": "Visa_File_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1248123907,
+          "mode": "list",
+          "cachedResultName": "Sheet6",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit#gid=1248123907"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email Address",
+              "displayName": "Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Priority Level",
+              "displayName": "Priority Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Lead Source",
+              "displayName": "Lead Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "formMode",
+              "displayName": "formMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "271dfc00-d768-49b6-80de-05b0930f363b",
+      "name": "Store lead Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "eh80ekdvYaR4g9fB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Lead Form",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Full Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email Address",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone Number",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Company Name"
+            },
+            {
+              "fieldLabel": "Priority Level",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "High"
+                  },
+                  {
+                    "option": "Medium"
+                  },
+                  {
+                    "option": "Low"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Lead Source",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Website"
+                  },
+                  {
+                    "option": "Social"
+                  },
+                  {
+                    "option": "Referral"
+                  },
+                  {
+                    "option": "Other"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d02526f0-d618-49b7-8aad-727e58e14fd3",
+      "name": "Lead Form",
+      "webhookId": "f05f76f3-b9d3-4c93-9e86-2ae85dcec78a"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Priority Check": {
+      "main": [
+        [
+          {
+            "node": "High priority email send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store lead Sheet": {
+      "main": [
+        [
+          {
+            "node": "Priority Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Form": {
+      "main": [
+        [
+          {
+            "node": "Store lead Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "596f415f-246d-4b02-b480-725fbd339d67",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "66e601c3b9a4ffec2031ea0958c5ca1e5a8d4a886bbe4c5d068373e9c8066ae8"
+  },
+  "id": "UJEieb4b89EfR0B4",
+  "tags": []
+}
