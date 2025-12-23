@@ -1,0 +1,220 @@
+{
+  "name": "New order invoice generated to CRM",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "New Product",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1264,
+        512
+      ],
+      "id": "8f65d6ae-d7f6-41d3-bae0-b17bd7b3fbd2",
+      "name": "Webhook",
+      "webhookId": "0b255cc8-fe00-4f1f-8a1b-6c34521bf21e"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1024,
+        512
+      ],
+      "id": "5f0679ae-84ae-4316-8f15-f3362958f16e",
+      "name": "Extract All data"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "10g6zpJQ9-7PMLtq4xmSXUTspd3BQs_-L9S7uNnv6nFM",
+          "mode": "list",
+          "cachedResultName": "Credentials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/10g6zpJQ9-7PMLtq4xmSXUTspd3BQs_-L9S7uNnv6nFM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Credentials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/10g6zpJQ9-7PMLtq4xmSXUTspd3BQs_-L9S7uNnv6nFM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Apps ",
+              "displayName": "Apps ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "API Keys ",
+              "displayName": "API Keys ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "API Keys_URL",
+              "displayName": "API Keys_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -784,
+        272
+      ],
+      "id": "2c726a4e-eba1-4695-892f-702333a82cc4",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kP9TnpiAr8s3eyrW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -608,
+        512
+      ],
+      "id": "88a365a6-2995-43e5-9d01-3b45f3af1c42",
+      "name": "Send a message",
+      "webhookId": "c04389ba-7c58-49a9-aefa-bc7b48b020d8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wAwU3sdrssqQlDSU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "invoice",
+        "Product_Details": [],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        272
+      ],
+      "id": "868960e7-7ce1-4c1b-b0f7-287174af3871",
+      "name": "Create an invoice"
+    },
+    {
+      "parameters": {
+        "templateId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "additionalFields": {}
+      },
+      "type": "@pdfgeneratorapi/n8n-nodes-pdf-generator-api.pdfGeneratorApi",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        272
+      ],
+      "id": "0deccb6f-8150-44a2-861a-616e981b6085",
+      "name": "Generate a PDF document"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract All data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Generate a PDF document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract All data": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate a PDF document": {
+      "main": [
+        [
+          {
+            "node": "Create an invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2d964493-c88b-4615-996e-023766313b03",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "427f6ccd641dc6db716d660e4c077d71c1152688b767a9898b8799835f1abb74"
+  },
+  "id": "n5kY7ihdloVmBrGZ",
+  "tags": []
+}
