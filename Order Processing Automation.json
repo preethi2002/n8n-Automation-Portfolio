@@ -1,0 +1,471 @@
+{
+  "name": "Order Processing Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Z5QoOi_0-VgSTWPT5gSQEhck7Kyh_mVz9tMYZB_zsNc",
+          "mode": "list",
+          "cachedResultName": "Task1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z5QoOi_0-VgSTWPT5gSQEhck7Kyh_mVz9tMYZB_zsNc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "customerName": "={{ $json.body.customerName }}",
+            "emailFrom": "={{ $json.body.emailFrom }}",
+            "product": "={{ $json.body.product }}",
+            "quantity": "={{ $json.body.quantity }}",
+            "orderDate": "={{ $json.body.orderDate ? new Date($json.body.orderDate).toISOString().split('T')[0] : '' }}"
+          },
+          "matchingColumns": [
+            "Customer Name"
+          ],
+          "schema": [
+            {
+              "id": "customerName",
+              "displayName": "customerName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "emailFrom",
+              "displayName": "emailFrom",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "product",
+              "displayName": "product",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "quantity",
+              "displayName": "quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "orderDate",
+              "displayName": "orderDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "headers",
+              "displayName": "headers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "params",
+              "displayName": "params",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "body",
+              "displayName": "body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "webhookUrl",
+              "displayName": "webhookUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "executionMode",
+              "displayName": "executionMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "8bc2554d-c307-4611-b20c-7391dd67b40a",
+      "name": "Save Order to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        784,
+        -128
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kP9TnpiAr8s3eyrW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "New Order Received",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        560,
+        -208
+      ],
+      "id": "5abd9ce1-c976-4d2b-9c1b-52108e101c53",
+      "name": "Order Website",
+      "webhookId": "737cd90c-7772-4ac6-bc47-ce620f115a4f"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 5,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "id": "499f05e2-53b3-4eda-a522-3d4e608a6010",
+      "name": "Order Received",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        544,
+        -48
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wAwU3sdrssqQlDSU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "U0A1S6XBR50",
+          "mode": "list",
+          "cachedResultName": "preethirnt2002"
+        },
+        "text": "=🎉 New order received from *{{ $json.customerName }}*\n📦 Product: {{ $json.product }}\n🔢 Quantity: {{ $json.quantity }}\n📧 Email: {{ $json.emailFrom }}\n📅 Date:{{ $json.orderDate }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "id": "0ca86b90-7adc-480a-8bd6-40a25abca267",
+      "name": "Notify Team on WareHouse",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        976,
+        -128
+      ],
+      "webhookId": "e321238a-5951-48cb-ad1f-74a778510636",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "uXgJcxKEe6TW0sZh",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "options": {
+          "systemMessage": "you are a system helpful assistent . if any user ask please resonse to the basic and friendly type"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1168,
+        -128
+      ],
+      "id": "dbb42fd3-e947-4243-bd14-f17a0ef66f84",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1136,
+        64
+      ],
+      "id": "e3ed70da-e37b-40cb-8a98-426ead236dff",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "dghedbEUTjNssEaz",
+          "name": "OpenAi account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "preethirnt2002@gmail.com",
+        "subject": "Payment Details ",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1488,
+        -128
+      ],
+      "id": "a2ba2be4-06c1-43be-a690-92473555654c",
+      "name": "Send a message",
+      "webhookId": "7128198d-2fed-490f-b609-85505498fff2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wAwU3sdrssqQlDSU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Document', ``, 'string') }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Sheet', ``, 'string') }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        1360,
+        48
+      ],
+      "id": "ae792440-e270-47f9-a060-2fbd338d0994",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kP9TnpiAr8s3eyrW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1680,
+        -128
+      ],
+      "id": "fce20ecf-02af-45fd-8f58-6984b100857e",
+      "name": "Create a record"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Save Order to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Notify Team on WareHouse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Website": {
+      "main": [
+        [
+          {
+            "node": "Save Order to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Received": {
+      "main": [
+        [
+          {
+            "node": "Save Order to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Team on WareHouse": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a3b51fd8-ec65-4f67-96d1-725f30e33212",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "427f6ccd641dc6db716d660e4c077d71c1152688b767a9898b8799835f1abb74"
+  },
+  "id": "9IspWkBGzlBJCh4u",
+  "tags": []
+}

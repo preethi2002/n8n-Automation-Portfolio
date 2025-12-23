@@ -1,0 +1,296 @@
+{
+  "name": "Stock / Inventory Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Z5QoOi_0-VgSTWPT5gSQEhck7Kyh_mVz9tMYZB_zsNc",
+          "mode": "list",
+          "cachedResultName": "Task1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z5QoOi_0-VgSTWPT5gSQEhck7Kyh_mVz9tMYZB_zsNc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Z5QoOi_0-VgSTWPT5gSQEhck7Kyh_mVz9tMYZB_zsNc/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -16,
+        -112
+      ],
+      "id": "e59c4e11-a46b-4149-8842-aa4f977a568d",
+      "name": "Stock/Inventory Check",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kP9TnpiAr8s3eyrW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -240,
+        -112
+      ],
+      "id": "a19756e8-49d1-4d8f-8f05-811dc3fb63a3",
+      "name": "Daily 9 AM Schedule"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "10g6zpJQ9-7PMLtq4xmSXUTspd3BQs_-L9S7uNnv6nFM",
+          "mode": "list",
+          "cachedResultName": "Credentials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/10g6zpJQ9-7PMLtq4xmSXUTspd3BQs_-L9S7uNnv6nFM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Credentials",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/10g6zpJQ9-7PMLtq4xmSXUTspd3BQs_-L9S7uNnv6nFM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Apps ",
+              "displayName": "Apps ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "API Keys ",
+              "displayName": "API Keys ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "API Keys_URL",
+              "displayName": "API Keys_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        400,
+        -112
+      ],
+      "id": "bb34f9c4-a498-44d4-80b8-e27d61884015",
+      "name": "Log sheet/Report",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kP9TnpiAr8s3eyrW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A1VQ4DP6G",
+          "mode": "list",
+          "cachedResultName": "all-resh-and-thosh"
+        },
+        "text": "={{ $json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        192,
+        -112
+      ],
+      "id": "b550696c-64fc-4558-aa5b-d2048b9ea55a",
+      "name": "Notification Warehouse/CRM",
+      "webhookId": "ef1a1f2f-4e7c-465e-8904-2e0b8152ecbb",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "uXgJcxKEe6TW0sZh",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        608,
+        -112
+      ],
+      "id": "0a510095-6435-453d-b0eb-21b1d497796e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        48
+      ],
+      "id": "d64954eb-151f-4df6-b973-b3f648014572",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "dghedbEUTjNssEaz",
+          "name": "OpenAi account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "preethirnt2002@gmail.com",
+        "subject": "WareHouse Alert message:",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        -112
+      ],
+      "id": "843fec07-f31b-420e-9721-672b15b15612",
+      "name": "Send a message",
+      "webhookId": "e89ee4e0-0fd4-40eb-a6f6-4bcc0141993f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wAwU3sdrssqQlDSU",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Stock/Inventory Check": {
+      "main": [
+        [
+          {
+            "node": "Notification Warehouse/CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily 9 AM Schedule": {
+      "main": [
+        [
+          {
+            "node": "Stock/Inventory Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notification Warehouse/CRM": {
+      "main": [
+        [
+          {
+            "node": "Log sheet/Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log sheet/Report": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ad6e6c4e-d797-4763-86f4-18ebcf98f89f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "427f6ccd641dc6db716d660e4c077d71c1152688b767a9898b8799835f1abb74"
+  },
+  "id": "kNKKBNpoWX5aroB8",
+  "tags": []
+}
