@@ -1,0 +1,415 @@
+{
+  "name": "Requirement Priority notification",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Payment Details ",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email Address",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone Number",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Company Name"
+            },
+            {
+              "fieldLabel": "Priority Level",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "High"
+                  },
+                  {
+                    "option": "Medium"
+                  },
+                  {
+                    "option": "Low"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "submittedAt",
+              "fieldType": "={{ $now }}",
+              "fieldOptions": {
+                "values": [
+                  {}
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -2112,
+        624
+      ],
+      "id": "347fc714-0658-4087-8c25-335729b3069b",
+      "name": "On form submission",
+      "webhookId": "09cdedac-55c4-49f3-97e6-bfa860a52c45"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA",
+          "mode": "list",
+          "cachedResultName": "Visa_File_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1248123907,
+          "mode": "list",
+          "cachedResultName": "Sheet6",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9I8z7RXIKBY7Nh3xT91Kyy8-oKDLHC7CI52Nu9rJDA/edit#gid=1248123907"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Full Name": "={{ $json.Name }}",
+            "Email Address": "={{ $json[\"Email Address\"] }}",
+            "Phone Number": "={{ $json[\"Phone Number\"] }}",
+            "Company Name": "={{ $json[\"Company Name\"] }}",
+            "Priority Level": "={{ $json[\"Priority Level\"] }}",
+            "submittedAt": "={{ $json.submittedAt }}",
+            "formMode": "={{ $json.formMode }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Full Name",
+              "displayName": "Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Address",
+              "displayName": "Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Priority Level",
+              "displayName": "Priority Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "formMode",
+              "displayName": "formMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1920,
+        624
+      ],
+      "id": "0650c5a4-ad9b-4a17-918e-f53a9bd99f3c",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kP9TnpiAr8s3eyrW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "preethirnt2002@gmail.com",
+        "subject": "Send All payment Details ",
+        "message": "={{ $json['Full Name'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1456,
+        544
+      ],
+      "id": "80474e64-5475-42e1-8931-a7ca68ba17a6",
+      "name": "Send a message",
+      "webhookId": "a10dc906-a89c-436e-91aa-ba717b4f967f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wAwU3sdrssqQlDSU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9302b3b2-7632-44b2-84ee-6b7846fc3b04",
+              "leftValue": "={{ $json['Priority Level'] }}",
+              "rightValue": "High",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1744,
+        624
+      ],
+      "id": "3f5b8dd7-d5e3-47ea-8eae-010f10a23d9d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14tsxq0Gnk4EwfmsGeykyhg42h3SGc0AmfIvl4WIRxo8",
+          "mode": "list",
+          "cachedResultName": "Visa_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14tsxq0Gnk4EwfmsGeykyhg42h3SGc0AmfIvl4WIRxo8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14tsxq0Gnk4EwfmsGeykyhg42h3SGc0AmfIvl4WIRxo8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "error_time",
+              "displayName": "error_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workflow_name",
+              "displayName": "workflow_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "node_name",
+              "displayName": "node_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_type",
+              "displayName": "error_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status_code",
+              "displayName": "status_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_rate_limit",
+              "displayName": "is_rate_limit",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "stack_trace",
+              "displayName": "stack_trace",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "raw_error",
+              "displayName": "raw_error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1440,
+        720
+      ],
+      "id": "f6433006-d6cf-4751-939f-81bc56408e2c",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kP9TnpiAr8s3eyrW",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6ab145bc-5b67-4d0a-9a65-9312ba56e60e",
+  "meta": {
+    "instanceId": "427f6ccd641dc6db716d660e4c077d71c1152688b767a9898b8799835f1abb74"
+  },
+  "id": "DH0yh7pBjjWNuVZA",
+  "tags": []
+}
