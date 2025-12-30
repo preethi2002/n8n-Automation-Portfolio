@@ -1,0 +1,271 @@
+{
+  "name": "Customer Feedback",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://companywebsite.com/api/feedback",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -160,
+        0
+      ],
+      "id": "1c19e790-e836-4d0c-be38-99561be9bc1f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "sendTo": "preethirnt2002@gmail.com",
+        "subject": "Customer Feedback",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        80
+      ],
+      "id": "ee75d368-2cf1-4022-ab26-f2a388b5f12c",
+      "name": "Send a message",
+      "webhookId": "9b3c225a-ed1a-4927-9095-bdae393a0c5c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wAwU3sdrssqQlDSU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -112
+      ],
+      "id": "e29b9f1c-2a7d-4f44-80eb-62cc802363fc",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "30c50840-8a20-4507-91cb-7921db51ecb1",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        336,
+        0
+      ],
+      "id": "f895abd9-fe38-4729-920f-97972c2166a0",
+      "name": "Bad feedback checked"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Customer feedback ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -496,
+        128
+      ],
+      "id": "20130a30-702a-4ce7-b45d-f68f7c85d305",
+      "name": "Webhook",
+      "webhookId": "eea93d7b-695c-4ead-b085-f7399993cb9b"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "1c00763d-593b-4d78-98b1-8c4c36e65b34",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        832,
+        80
+      ],
+      "id": "9c92cdfb-324f-4261-8f01-47b4daae6c09",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.maped }}",
+        "options": {
+          "systemMessage": "=You are a Customer Review Analysis AI Agent.\n\nYour task:\n- Analyze the given customer review\n- Identify whether the review is a BAD REVIEW or NOT\n\nDefinition of BAD REVIEW:\n- Negative feedback\n- Complaints\n- Dissatisfaction\n- Poor service, delay, rude staff, bad experience\n- Strong negative emotions (angry, disappointed, frustrated)\n\nRules:\n- Do NOT give suggestions or explanations\n- Do NOT rewrite the review\n- Do NOT add extra text\n- Only analyze sentiment\n\nOutput format (STRICT – follow exactly):\n\nReview_Feedback: \"<original customer review>\"\nBad_Review: true or false\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        32,
+        0
+      ],
+      "id": "66c0d0fe-0f64-4a39-8b10-d66a14df8b9a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        176
+      ],
+      "id": "cf5f46c9-5269-4aae-b33f-1315ccfb0b2c",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "dghedbEUTjNssEaz",
+          "name": "OpenAi account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bad feedback checked": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Bad feedback checked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7b52d7a0-3975-4ab2-861c-596a504d9849",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "427f6ccd641dc6db716d660e4c077d71c1152688b767a9898b8799835f1abb74"
+  },
+  "tags": []
+}
